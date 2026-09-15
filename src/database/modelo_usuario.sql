@@ -1,0 +1,8 @@
+CREATE TABLE Usuario (     
+>> id SERIAL PRIMARY KEY,
+>> nombre VARCHAR(100) NOT NULL,
+>> rut VARCHAR(12) UNIQUE NOT NULL,
+>> telefono VARCHAR(15),
+>> rol VARCHAR(50) NOT NULL,
+>> fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+>> );
