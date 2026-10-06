@@ -1,0 +1,63 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #edf3f6;
+  background: #0a1115;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at top right, #17313a 0, #0a1115 42%); }
+button { font: inherit; }
+
+.app-shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding-bottom: 64px; }
+.topbar { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding: 42px 0 28px; }
+.eyebrow, .section-label { color: #ff7b54; font-weight: 800; letter-spacing: .12em; font-size: .75rem; margin: 0 0 8px; }
+h1 { font-size: clamp(2rem, 5vw, 3.7rem); line-height: 1; margin: 0; }
+.subtitle { color: #9fb2ba; margin: 10px 0 0; }
+.api-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid #2b4149; background: #101c21; font-weight: 700; font-size: .88rem; }
+.api-status .dot { width: 9px; height: 9px; border-radius: 50%; background: #ff5a5f; }
+.api-status.online .dot { background: #42d392; box-shadow: 0 0 14px #42d392; }
+
+.hero-card, .alerts-section { border: 1px solid #263941; border-radius: 22px; background: rgba(15, 27, 32, .92); box-shadow: 0 24px 70px rgba(0, 0, 0, .25); }
+.hero-card { display: flex; justify-content: space-between; align-items: center; gap: 28px; padding: 30px; }
+.hero-card h2, .section-heading h2 { margin: 0 0 10px; }
+.hero-card p { color: #a7bac2; max-width: 700px; line-height: 1.65; }
+button { border: 0; border-radius: 12px; padding: 13px 18px; background: #ff6b47; color: white; font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px rgba(255, 107, 71, .18); }
+button:hover { filter: brightness(1.08); }
+button:disabled { opacity: .55; cursor: wait; }
+button.secondary { background: #1a2a30; color: #dfe9ed; box-shadow: none; border: 1px solid #33484f; }
+
+.notice { margin: 18px 0; padding: 14px 18px; border-radius: 12px; background: #15272c; border-left: 4px solid #ff7b54; color: #dce8ec; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 18px 0; }
+.summary-grid article { padding: 20px; background: #101c21; border: 1px solid #24363d; border-radius: 16px; }
+.summary-grid span { color: #8ca0a8; display: block; margin-bottom: 8px; }
+.summary-grid strong { font-size: 2rem; }
+
+.alerts-section { padding: 26px; }
+.section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.empty-state { padding: 42px 20px; text-align: center; border: 1px dashed #33464d; border-radius: 16px; color: #82969e; }
+.empty-state strong, .empty-state span { display: block; }
+.empty-state strong { color: #dce8ec; margin-bottom: 8px; }
+.alert-list { display: grid; gap: 16px; }
+.alert-card { background: #0c171b; border: 1px solid #293c43; border-radius: 16px; padding: 20px; }
+.alert-header, .alert-footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.alert-header h3 { margin: 8px 0 0; }
+.priority, .status { display: inline-flex; border-radius: 999px; padding: 5px 9px; font-size: .72rem; font-weight: 900; letter-spacing: .06em; }
+.priority.alta { background: #50231f; color: #ff9c85; }
+.priority.media { background: #4b3c18; color: #ffd36a; }
+.priority.baja { background: #173b30; color: #75e6b6; }
+.status.pending { background: #3d2618; color: #ffbd73; }
+.status.dispatched { background: #17352d; color: #7ce1b7; }
+.alert-card > p { color: #b5c5cb; }
+.alert-data { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+.alert-data div { background: #111f24; padding: 12px; border-radius: 10px; }
+.alert-data dt { color: #7f939a; font-size: .75rem; }
+.alert-data dd { margin: 4px 0 0; font-weight: 800; }
+.alert-footer { border-top: 1px solid #21343b; padding-top: 16px; }
+.alert-footer small { color: #738990; }
+
+@media (max-width: 760px) {
+  .topbar, .hero-card, .section-heading, .alert-header, .alert-footer { align-items: stretch; flex-direction: column; }
+  .summary-grid { grid-template-columns: 1fr; }
+  .alert-data { grid-template-columns: 1fr 1fr; }
+}
