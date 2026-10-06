@@ -9,8 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "leaflet": "^1.9.4",
     "react": "latest",
     "react-dom": "latest",
+    "react-leaflet": "^5.0.0",
     "vite": "latest"
   },
   "devDependencies": {
