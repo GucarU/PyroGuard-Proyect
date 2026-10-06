@@ -37,6 +37,7 @@ class SensorDetection(BaseModel):
     longitude: float = Field(ge=-180, le=180)
     battery_level: int = Field(default=100, ge=0, le=100)
     temperature: float = Field(default=20.0)
+    wind_speed: float = Field(default=0.0)
 
 class DispatchRequest(BaseModel):
     unit: str = Field(default="BRAVO-1", min_length=1, max_length=50)
@@ -100,6 +101,7 @@ def init_db() -> None:
                 sensor_id TEXT NOT NULL,
                 battery_level INTEGER NOT NULL,
                 temperature REAL NOT NULL,
+                wind_speed REAL NOT NULL,
                 timestamp TEXT NOT NULL
             )
             """
@@ -144,27 +146,40 @@ def health():
     status_code=status.HTTP_201_CREATED,
 )
 def receive_sensor_detection(detection: SensorDetection):
-    """Recibe una lectura del sensor y crea una alerta solo si se detectó humo."""
-    if not detection.smoke_detected:
-        return {
-            "alert_created": False,
-            "message": "Lectura recibida. No se detectó humo; no se creó una alerta.",
-            "alert": None,
-        }
-
-    priority = priority_for(detection.smoke_level)
+    """Recibe datos, guarda métricas y crea alerta si hay humo o viento peligroso."""
     detected_at = datetime.now(timezone.utc).isoformat()
-    message = f"Sensor {detection.sensor_id} detectó humo en {detection.sector}."
-
+    
     try:
         with db_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO mediciones (sensor_id, battery_level, timestamp)
-                VALUES (?, ?, ?)
+                INSERT INTO mediciones (sensor_id, battery_level, temperature, wind_speed, timestamp)
+                VALUES (?, ?, ?, ?, ?)
                 """,
-                (detection.sensor_id, detection.battery_level, detection.temperature, detected_at)
+                (detection.sensor_id, detection.battery_level, detection.temperature, detection.wind_speed, detected_at)
             )
+            
+            wind_alert = detection.wind_speed > 40
+            
+            if not detection.smoke_detected and not wind_alert:
+                return {
+                    "alert_created": False,
+                    "message": "Lectura recibida. Sin humo ni vientos peligrosos.",
+                    "alert": None,
+                }
+
+            priority = priority_for(detection.smoke_level) if detection.smoke_detected else "MEDIA"
+            if wind_alert and detection.smoke_detected:
+                priority = "ALTA"
+                
+            message = f"Sensor {detection.sensor_id} detectó "
+            if wind_alert and detection.smoke_detected:
+                message += f"humo y vientos fuertes ({detection.wind_speed} km/h) en {detection.sector}."
+            elif wind_alert:
+                message += f"vientos fuertes ({detection.wind_speed} km/h) en {detection.sector}."
+            else:
+                message += f"humo en {detection.sector}."
+
             cursor = conn.execute(
                 """
                 INSERT INTO alertas (
@@ -173,31 +188,23 @@ def receive_sensor_detection(detection: SensorDetection):
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    "HU-01",
-                    "RF01",
-                    detection.sensor_id,
-                    detection.sector,
-                    detection.smoke_level,
-                    detection.latitude,
-                    detection.longitude,
-                    priority,
-                    "PENDIENTE",
-                    message,
-                    detected_at,
-                ),
+                    "HU-01/04", "RF01", detection.sensor_id, detection.sector, detection.smoke_level,
+                    detection.latitude, detection.longitude, priority, "PENDIENTE", message, detected_at
+                )
             )
             row = conn.execute(
                 "SELECT * FROM alertas WHERE id = ?", (cursor.lastrowid,)
             ).fetchone()
+            
     except sqlite3.Error as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="No fue posible guardar la alerta en la base de datos.",
+            detail="No fue posible guardar los datos en la base de datos.",
         ) from exc
 
     return {
         "alert_created": True,
-        "message": "Alerta automática creada y disponible para la central de emergencias.",
+        "message": "Alerta automática o advertencia creada exitosamente.",
         "alert": row_to_alert(row),
     }
 
