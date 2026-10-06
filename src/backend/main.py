@@ -84,7 +84,7 @@ def db_connection():
 
 def init_db() -> None:
     with db_connection() as conn:
-        conn.execute(
+        conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS alertas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +101,7 @@ def init_db() -> None:
                 detected_at TEXT NOT NULL,
                 dispatched_at TEXT,
                 dispatched_unit TEXT
-            )
+            );
             """
             """
             CREATE TABLE IF NOT EXISTS mediciones (
@@ -111,7 +111,7 @@ def init_db() -> None:
                 temperature REAL NOT NULL,
                 wind_speed REAL NOT NULL,
                 timestamp TEXT NOT NULL
-            )
+            );
             """
             """
             CREATE TABLE IF NOT EXISTS reportes_vecinos (
@@ -123,7 +123,7 @@ def init_db() -> None:
                 longitude REAL NOT NULL,
                 description TEXT NOT NULL,
                 reported_at TEXT NOT NULL
-            )
+            );
             """
         )
 
