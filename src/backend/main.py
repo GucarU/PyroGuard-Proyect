@@ -43,6 +43,13 @@ class SensorDetection(BaseModel):
 class DispatchRequest(BaseModel):
     unit: str = Field(default="BRAVO-1", min_length=1, max_length=50)
 
+class NeighborReport(BaseModel):
+    name: str = Field(min_length=2, max_length=100)
+    phone: str = Field(min_length=8, max_length=20)
+    sector: str = Field(min_length=1, max_length=120)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    description: str = Field(min_length=5, max_length=300)
 
 class Alert(BaseModel):
     id: int
@@ -106,6 +113,18 @@ def init_db() -> None:
                 timestamp TEXT NOT NULL
             )
             """
+            """
+            CREATE TABLE IF NOT EXISTS reportes_vecinos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                sector TEXT NOT NULL,
+                latitude REAL NOT NULL,
+                longitude REAL NOT NULL,
+                description TEXT NOT NULL,
+                reported_at TEXT NOT NULL
+            )
+            """
         )
 
 
@@ -157,12 +176,7 @@ def receive_sensor_detection(detection: SensorDetection):
                 INSERT INTO mediciones (sensor_id, battery_level, temperature, wind_speed, timestamp)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-<<<<<<< HEAD
                 (detection.sensor_id, detection.battery_level, detection.temperature, detection.wind_speed, detected_at)
-=======
-                (detection.sensor_id, detection.battery_level, detection.temperature, detected_at)
-                (detection.sensor_id, detection.battery_level, detected_at)
->>>>>>> e0776f91866da297d4e8358943589d2bb572b52b
             )
             
             wind_alert = detection.wind_speed > 40
@@ -293,3 +307,48 @@ def get_temperature_history(sensor_id: str):
         raise HTTPException(status_code=404, detail="No hay mediciones para este sensor.")
         
     return [dict(row) for row in rows]
+
+@app.post("/api/reports/neighbors", tags=["Reportes Vecinales"], status_code=status.HTTP_201_CREATED)
+def receive_neighbor_report(report: NeighborReport):
+    """HU-12: Recibe un reporte de incendio desde la app de vecinos y genera alerta."""
+    reported_at = datetime.now(timezone.utc).isoformat()
+    
+    try:
+        with db_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO reportes_vecinos (name, phone, sector, latitude, longitude, description, reported_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (report.name, report.phone, report.sector, report.latitude, report.longitude, report.description, reported_at)
+            )
+            
+            message = f"Reporte ciudadano ({report.name} - {report.phone}): {report.description} en {report.sector}."
+            
+            cursor = conn.execute(
+                """
+                INSERT INTO alertas (
+                    user_story, requirement, sensor_id, sector, smoke_level,
+                    latitude, longitude, priority, status, message, detected_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "HU-12", "RF12", "APP_VECINAL", report.sector, 100, # Nivel de "humo" ficticio para dar prioridad ALTA
+                    report.latitude, report.longitude, "ALTA", "PENDIENTE", message, reported_at
+                )
+            )
+            row = conn.execute(
+                "SELECT * FROM alertas WHERE id = ?", (cursor.lastrowid,)
+            ).fetchone()
+            
+    except sqlite3.Error as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No fue posible procesar el reporte vecinal.",
+        ) from exc
+
+    return {
+        "report_received": True,
+        "message": "Reporte ciudadano recibido exitosamente. Central de bomberos notificada.",
+        "alert": row_to_alert(row),
+    }
