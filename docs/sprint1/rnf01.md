@@ -13,3 +13,11 @@ RNF01 establece que la alerta debe llegar en menos de un minuto. La medición se
 ## Resultados
 
 Pendiente de ejecución en un entorno con el backend levantado. No se informan valores estimados como resultados medidos.
+
+## Ejecución 2026-10-06T02:25:50.025248+00:00
+
+- API: `http://127.0.0.1:8000`
+- Muestras exitosas: 10/10
+- Promedio: 0.024 s
+- Máximo: 0.084 s
+- Método: cronómetro monotónico desde el envío POST hasta que GET /api/alerts contiene el sensor simulado.
