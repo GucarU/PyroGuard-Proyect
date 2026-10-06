@@ -51,7 +51,7 @@ class Alert(BaseModel):
     latitude: float
     longitude: float
     priority: Literal["BAJA", "MEDIA", "ALTA"]
-    status: Literal["PENDIENTE", "UNIDAD_DESPACHADA"]
+    status: Literal["PENDIENTE", "VALIDADO", "UNIDAD_DESPACHADA"]
     message: str
     detected_at: str
     dispatched_at: str | None = None
@@ -199,6 +199,34 @@ def get_alert(alert_id: int):
     if row is None:
         raise HTTPException(status_code=404, detail="Alerta no encontrada.")
     return row_to_alert(row)
+
+@app.patch("/api/alerts/{alert_id}/validate", response_model=Alert, tags=["Alertas"])
+def validate_alert(alert_id: int):
+    """HU-05: Oficial de Bomberos valida un foco de incendio."""
+    with db_connection() as conn:
+        row = conn.execute("SELECT * FROM alertas WHERE id = ?", (alert_id,)).fetchone()
+        
+        if row is None:
+            raise HTTPException(status_code=404, detail="Alerta no encontrada.")
+            
+        if row["status"] != "PENDIENTE":
+            raise HTTPException(
+                status_code=409, 
+                detail=f"La alerta no se puede validar porque su estado actual es {row['status']}."
+            )
+
+        # Actualiza el estado a VALIDADO
+        conn.execute(
+            """
+            UPDATE alertas
+            SET status = 'VALIDADO'
+            WHERE id = ?
+            """,
+            (alert_id,)
+        )
+        updated = conn.execute("SELECT * FROM alertas WHERE id = ?", (alert_id,)).fetchone()
+        
+    return row_to_alert(updated)
 
 
 @app.patch("/api/alerts/{alert_id}/dispatch", response_model=Alert, tags=["Alertas"])
