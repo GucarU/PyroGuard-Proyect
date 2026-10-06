@@ -1,48 +1,31 @@
-\# Pyroguard - Sistema Integrado de Alerta Temprana de Incendios Forestales
+# PyroGuard
 
+Sistema de alerta temprana y coordinación logística para incendios forestales en Valparaíso y Viña del Mar. Este incremento implementa HU-01: recibir detecciones de sensores y crear alertas para la central de emergencias.
 
+## Equipo
 
-\## Descripción
+- Iván Mandiola
+- Maximiliano Ávila
+- José Luis Marabolí
 
-Los incendios forestales en la región de Valparaíso y Viña del Mar provocan pérdidas humanas y materiales debido a la demora en la detección y las alertas tardías de evacuación. \*\*Pyroguard\*\* soluciona este problema mediante un sistema que conecta sensores físicos en terreno con una central de emergencias, automatizando la alerta temprana, permitiendo a los oficiales validar focos para evitar falsas alarmas, y trazando rutas de evacuación seguras en los dispositivos móviles de los vecinos.
+## Tecnologías del Sprint 1
 
+- API: Python y FastAPI
+- Persistencia: SQLite
+- Panel web: React y Vite
+- Pruebas: pytest y FastAPI TestClient
 
+## Organización
 
-\## Integrantes
+- `src/backend/`: API y persistencia del backend.
+- `src/frontend/`: panel web del operador.
+- `src/simulador/`: simulador de lecturas de sensor.
+- `tests/`: pruebas de aceptación e integración para HU-01.
+- `scripts/`: herramientas para medir RNF01.
+- `docs/`: documentación y evidencias del Sprint 1.
 
-\- Iván Mandiola
+## Puesta en marcha
 
-\- Maximiliano Ávila
+Consulta [INSTRUCCIONES_HU01.md](INSTRUCCIONES_HU01.md) para instalar dependencias, iniciar el backend y el panel, ejecutar las pruebas y usar el simulador.
 
-\- José Luis Marabolí
-
-
-
-\## Arquitectura
-
-El sistema utiliza una arquitectura \*\*Cliente-Servidor\*\* estructurada bajo un modelo de \*\*Monolito Modular\*\* dividido en capas (Presentación, Aplicación, Dominio e Infraestructura). La sección visual implementa el patrón Modelo-Vista-Controlador (MVC).
-
-
-
-\## Tecnologías
-
-\- \*\*Frontend / Móvil:\*\* React y React Native.
-
-\- \*\*Backend:\*\* Python (FastAPI o Django).
-
-\- \*\*Base de Datos:\*\* PostgreSQL con soporte para coordenadas (PostGIS).
-
-\- \*\*Alojamiento (Cloud):\*\* Google Cloud o AWS.
-
-\- \*\*Integraciones externas:\*\* Google Maps API y Firebase Cloud Messaging.
-
-
-
-\## Organización del repositorio
-
-\- `/docs`: Documentación técnica, diagramas UML, manuales y evidencias de gestión (Taiga).
-
-\- `/src`: Código fuente del proyecto (incluye submódulos de frontend y backend).
-
-\- `/tests`: Scripts y archivos para las pruebas unitarias y de integración del sistema.
-
+La documentación interactiva de la API está disponible en `http://127.0.0.1:8000/docs` cuando el backend está funcionando.
