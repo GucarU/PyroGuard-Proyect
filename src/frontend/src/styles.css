@@ -67,3 +67,70 @@ button.secondary { background: #1a2a30; color: #dfe9ed; box-shadow: none; border
 .map-section { margin: 18px 0; padding: 22px; border: 1px solid #263941; border-radius: 22px; background: rgba(15, 27, 32, .92); overflow: hidden; }
 .map-section h2 { margin: 0 0 16px; }
 .map-section .leaflet-container { border-radius: 14px; }
+
+/* Sprint actual: frontend HU-02, HU-03, HU-04 y HU-12 */
+.hero-actions, .alert-actions, .tag-row, .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.section-description { color: #8fa5ad; margin: 6px 0 0; line-height: 1.5; }
+.sensor-section, .citizen-section { margin: 18px 0; padding: 26px; border: 1px solid #263941; border-radius: 22px; background: rgba(15, 27, 32, .92); box-shadow: 0 24px 70px rgba(0, 0, 0, .18); }
+.sensor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.sensor-card { border: 1px solid #2a3d44; border-radius: 16px; padding: 18px; background: #0c171b; }
+.sensor-card.critical { border-color: #b84343; background: #261516; }
+.sensor-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sensor-card-heading > div { display: flex; align-items: center; gap: 9px; }
+.sensor-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: #42d392; box-shadow: 0 0 12px rgba(66, 211, 146, .5); }
+.sensor-dot.critical { background: #ff5a5f; box-shadow: 0 0 12px rgba(255, 90, 95, .55); }
+.battery-pill { padding: 5px 9px; border-radius: 999px; background: #15382f; color: #78e0b8; font-size: .8rem; font-weight: 900; }
+.battery-pill.critical { background: #552225; color: #ff969a; }
+.battery-track { height: 8px; border-radius: 999px; background: #1b2b31; overflow: hidden; margin: 16px 0 12px; }
+.battery-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #42d392, #a4e764); }
+.sensor-card.critical .battery-track span { background: #ff5a5f; }
+.sensor-card p { color: #8ea2aa; font-size: .82rem; margin: 8px 0; }
+.sensor-button { width: 100%; margin-top: 8px; }
+.api-limitation { color: #d4b06d !important; }
+.map-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+.map-heading h2 { margin: 0; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; color: #9fb2ba; font-size: .76rem; }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.legend-dot.high { background: #ef4444; }
+.legend-dot.medium { background: #f59e0b; }
+.legend-dot.low { background: #22c55e; }
+.legend-dot.wind { background: #8b5cf6; }
+.map-popup { display: grid; gap: 5px; min-width: 180px; color: #182026; }
+.map-popup-button { margin-top: 6px; padding: 8px 10px; border-radius: 8px; }
+.wind-warning { color: #6d28d9; }
+.wind-badge, .citizen-badge { display: inline-flex; border-radius: 999px; padding: 5px 9px; font-size: .7rem; font-weight: 900; letter-spacing: .04em; }
+.wind-badge { background: #32235a; color: #c4b5fd; }
+.citizen-badge { background: #17334a; color: #8bd3ff; }
+.wind-card { border-color: #5d4a8d; }
+.report-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.report-form label { display: grid; gap: 7px; color: #aec0c7; font-size: .83rem; font-weight: 700; }
+.report-form input, .report-form textarea { width: 100%; border: 1px solid #30454d; border-radius: 11px; background: #0b161a; color: #edf3f6; padding: 12px 13px; font: inherit; outline: none; }
+.report-form input:focus, .report-form textarea:focus { border-color: #ff7b54; box-shadow: 0 0 0 3px rgba(255, 123, 84, .12); }
+.report-form textarea { min-height: 110px; resize: vertical; }
+.full-field { grid-column: 1 / -1; }
+.photo-field small { color: #d3b36f; font-weight: 500; line-height: 1.45; }
+.form-actions { justify-content: flex-end; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 22px; background: rgba(1, 7, 10, .78); backdrop-filter: blur(6px); }
+.modal-card { width: min(900px, 100%); max-height: calc(100vh - 44px); overflow: auto; border: 1px solid #334850; border-radius: 20px; background: #0e1a1f; padding: 24px; box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.modal-header { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-bottom: 18px; }
+.modal-header h2 { margin: 0; }
+.temperature-chart-wrap { display: grid; gap: 16px; }
+.temperature-chart { width: 100%; min-height: 240px; border: 1px solid #22363d; border-radius: 14px; background: #091317; }
+.chart-axis { stroke: #4b6169; stroke-width: 1.5; }
+.chart-line { stroke: #ff7b54; stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.chart-point { fill: #ffb39d; stroke: #ff6b47; stroke-width: 2; }
+.chart-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.chart-meta span { padding: 12px; border-radius: 10px; background: #122127; color: #91a5ad; }
+.chart-meta strong { color: #edf3f6; }
+.temperature-table { display: grid; gap: 7px; }
+.temperature-row { display: flex; justify-content: space-between; gap: 15px; padding: 10px 12px; border-bottom: 1px solid #20333a; color: #8fa4ac; }
+.temperature-row strong { color: #edf3f6; }
+
+@media (max-width: 760px) {
+  .map-heading, .modal-header { align-items: stretch; flex-direction: column; }
+  .report-form { grid-template-columns: 1fr; }
+  .full-field { grid-column: auto; }
+  .chart-meta { grid-template-columns: 1fr; }
+  .hero-actions > button, .form-actions > button { width: 100%; }
+}
