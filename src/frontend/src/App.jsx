@@ -1,10 +1,11 @@
+﻿import AlertMap from './AlertMap'
 import { useCallback, useEffect, useState } from 'react';
 
 const API = 'http://127.0.0.1:8000';
 
 const DEMO_DETECTION = {
   sensor_id: 'PG-VALPO-01',
-  sector: 'Camino La Pólvora',
+  sector: 'Camino La PÃ³lvora',
   smoke_detected: true,
   smoke_level: 82,
   latitude: -33.0757,
@@ -76,9 +77,9 @@ function App() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">PYROGUARD · HU-01 · RF01</p>
+          <p className="eyebrow">PYROGUARD Â· HU-01 Â· RF01</p>
           <h1>Central de Emergencias</h1>
-          <p className="subtitle">Alerta automática por detección de humo</p>
+          <p className="subtitle">Alerta automÃ¡tica por detecciÃ³n de humo</p>
         </div>
         <div className={`api-status ${backendOk ? 'online' : 'offline'}`}>
           <span className="dot" />
@@ -92,12 +93,12 @@ function App() {
             <p className="section-label">Simulador de sensor IoT</p>
             <h2>Probar el flujo completo de la HU-01</h2>
             <p>
-              Simula un sensor en Camino La Pólvora con nivel de humo 82. La API registra la
+              Simula un sensor en Camino La PÃ³lvora con nivel de humo 82. La API registra la
               alerta y la muestra inmediatamente en el panel del operador.
             </p>
           </div>
           <button onClick={simulateSmoke} disabled={loading}>
-            {loading ? 'Enviando...' : 'Simular detección de humo'}
+            {loading ? 'Enviando...' : 'Simular detecciÃ³n de humo'}
           </button>
         </section>
 
@@ -118,6 +119,8 @@ function App() {
           </article>
         </section>
 
+        <AlertMap alerts={alerts} />
+
         <section className="alerts-section">
           <div className="section-heading">
             <div>
@@ -130,7 +133,7 @@ function App() {
           {alerts.length === 0 ? (
             <div className="empty-state">
               <strong>No hay alertas activas.</strong>
-              <span>Usa el simulador para generar una detección de prueba.</span>
+              <span>Usa el simulador para generar una detecciÃ³n de prueba.</span>
             </div>
           ) : (
             <div className="alert-list">
@@ -139,7 +142,7 @@ function App() {
                   <div className="alert-header">
                     <div>
                       <span className={`priority ${alert.priority.toLowerCase()}`}>{alert.priority}</span>
-                      <h3>Alerta #{alert.id} · {alert.sector}</h3>
+                      <h3>Alerta #{alert.id} Â· {alert.sector}</h3>
                     </div>
                     <span className={`status ${alert.status === 'PENDIENTE' ? 'pending' : 'dispatched'}`}>
                       {alert.status.replace('_', ' ')}
@@ -174,3 +177,5 @@ function App() {
 }
 
 export default App;
+
+

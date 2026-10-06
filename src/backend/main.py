@@ -38,6 +38,7 @@ class SensorDetection(BaseModel):
     battery_level: int = Field(default=100, ge=0, le=100)
     temperature: float = Field(default=20.0)
 
+
 class DispatchRequest(BaseModel):
     unit: str = Field(default="BRAVO-1", min_length=1, max_length=50)
 
@@ -164,6 +165,7 @@ def receive_sensor_detection(detection: SensorDetection):
                 VALUES (?, ?, ?)
                 """,
                 (detection.sensor_id, detection.battery_level, detection.temperature, detected_at)
+                (detection.sensor_id, detection.battery_level, detected_at)
             )
             cursor = conn.execute(
                 """
