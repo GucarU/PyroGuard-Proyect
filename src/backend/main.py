@@ -35,6 +35,7 @@ class SensorDetection(BaseModel):
     smoke_level: int = Field(ge=0, le=100)
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
+    battery_level: int = Field(default=100, ge=0, le=100)
 
 
 class DispatchRequest(BaseModel):
@@ -51,7 +52,7 @@ class Alert(BaseModel):
     latitude: float
     longitude: float
     priority: Literal["BAJA", "MEDIA", "ALTA"]
-    status: Literal["PENDIENTE", "VALIDADO", "UNIDAD_DESPACHADA"]
+    status: Literal["PENDIENTE", "UNIDAD_DESPACHADA"]
     message: str
     detected_at: str
     dispatched_at: str | None = None
@@ -91,6 +92,14 @@ def init_db() -> None:
                 detected_at TEXT NOT NULL,
                 dispatched_at TEXT,
                 dispatched_unit TEXT
+            )
+            """
+            """
+            CREATE TABLE IF NOT EXISTS mediciones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sensor_id TEXT NOT NULL,
+                battery_level INTEGER NOT NULL,
+                timestamp TEXT NOT NULL
             )
             """
         )
@@ -148,6 +157,13 @@ def receive_sensor_detection(detection: SensorDetection):
 
     try:
         with db_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO mediciones (sensor_id, battery_level, timestamp)
+                VALUES (?, ?, ?)
+                """,
+                (detection.sensor_id, detection.battery_level, detected_at)
+            )
             cursor = conn.execute(
                 """
                 INSERT INTO alertas (
@@ -200,34 +216,6 @@ def get_alert(alert_id: int):
         raise HTTPException(status_code=404, detail="Alerta no encontrada.")
     return row_to_alert(row)
 
-@app.patch("/api/alerts/{alert_id}/validate", response_model=Alert, tags=["Alertas"])
-def validate_alert(alert_id: int):
-    """HU-05: Oficial de Bomberos valida un foco de incendio."""
-    with db_connection() as conn:
-        row = conn.execute("SELECT * FROM alertas WHERE id = ?", (alert_id,)).fetchone()
-        
-        if row is None:
-            raise HTTPException(status_code=404, detail="Alerta no encontrada.")
-            
-        if row["status"] != "PENDIENTE":
-            raise HTTPException(
-                status_code=409, 
-                detail=f"La alerta no se puede validar porque su estado actual es {row['status']}."
-            )
-
-        # Actualiza el estado a VALIDADO
-        conn.execute(
-            """
-            UPDATE alertas
-            SET status = 'VALIDADO'
-            WHERE id = ?
-            """,
-            (alert_id,)
-        )
-        updated = conn.execute("SELECT * FROM alertas WHERE id = ?", (alert_id,)).fetchone()
-        
-    return row_to_alert(updated)
-
 
 @app.patch("/api/alerts/{alert_id}/dispatch", response_model=Alert, tags=["Alertas"])
 def dispatch_unit(alert_id: int, request: DispatchRequest):
@@ -258,3 +246,16 @@ def clear_alerts():
         conn.execute("DELETE FROM alertas")
         conn.execute("DELETE FROM sqlite_sequence WHERE name = 'alertas'")
     return {"message": "Alertas eliminadas."}
+
+@app.get("/api/sensors/status", tags=["Sensores"])
+def get_sensors_status():
+    """HU-02: Devuelve el nivel de batería y último estado de los sensores."""
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT sensor_id, battery_level, MAX(timestamp) as last_update
+            FROM mediciones
+            GROUP BY sensor_id
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]
