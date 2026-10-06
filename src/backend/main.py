@@ -36,6 +36,7 @@ class SensorDetection(BaseModel):
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
     battery_level: int = Field(default=100, ge=0, le=100)
+    temperature: float = Field(default=20.0)
 
 
 class DispatchRequest(BaseModel):
@@ -99,6 +100,7 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 sensor_id TEXT NOT NULL,
                 battery_level INTEGER NOT NULL,
+                temperature REAL NOT NULL,
                 timestamp TEXT NOT NULL
             )
             """
@@ -162,6 +164,7 @@ def receive_sensor_detection(detection: SensorDetection):
                 INSERT INTO mediciones (sensor_id, battery_level, timestamp)
                 VALUES (?, ?, ?)
                 """,
+                (detection.sensor_id, detection.battery_level, detection.temperature, detected_at)
                 (detection.sensor_id, detection.battery_level, detected_at)
             )
             cursor = conn.execute(
@@ -258,4 +261,24 @@ def get_sensors_status():
             GROUP BY sensor_id
             """
         ).fetchall()
+    return [dict(row) for row in rows]
+
+@app.get("/api/sensors/{sensor_id}/temperature", tags=["Sensores"])
+def get_temperature_history(sensor_id: str):
+    """HU-03: Devuelve los datos históricos de temperatura para el gráfico."""
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT temperature, timestamp 
+            FROM mediciones 
+            WHERE sensor_id = ? 
+            ORDER BY timestamp DESC 
+            LIMIT 60
+            """, 
+            (sensor_id,)
+        ).fetchall()
+        
+    if not rows:
+        raise HTTPException(status_code=404, detail="No hay mediciones para este sensor.")
+        
     return [dict(row) for row in rows]
