@@ -39,6 +39,7 @@ class SensorDetection(BaseModel):
     temperature: float = Field(default=20.0)
     wind_speed: float = Field(default=0.0)
 
+
 class DispatchRequest(BaseModel):
     unit: str = Field(default="BRAVO-1", min_length=1, max_length=50)
 
@@ -156,7 +157,12 @@ def receive_sensor_detection(detection: SensorDetection):
                 INSERT INTO mediciones (sensor_id, battery_level, temperature, wind_speed, timestamp)
                 VALUES (?, ?, ?, ?, ?)
                 """,
+<<<<<<< HEAD
                 (detection.sensor_id, detection.battery_level, detection.temperature, detection.wind_speed, detected_at)
+=======
+                (detection.sensor_id, detection.battery_level, detection.temperature, detected_at)
+                (detection.sensor_id, detection.battery_level, detected_at)
+>>>>>>> e0776f91866da297d4e8358943589d2bb572b52b
             )
             
             wind_alert = detection.wind_speed > 40
