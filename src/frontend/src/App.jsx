@@ -1,28 +1,43 @@
-﻿import AlertMap from './AlertMap'
 import { useCallback, useEffect, useState } from 'react';
+import AlertMap from './AlertMap';
 
-const API = 'http://127.0.0.1:8000';
+// En desarrollo Vite redirige /api al backend mediante vite.config.js.
+// VITE_API_URL queda disponible por si más adelante despliegan el frontend aparte.
+const API = import.meta.env.VITE_API_URL || '';
 
 const DEMO_DETECTION = {
   sensor_id: 'PG-VALPO-01',
-  sector: 'Camino La PÃ³lvora',
+  sector: 'Camino La Pólvora',
   smoke_detected: true,
   smoke_level: 82,
   latitude: -33.0757,
   longitude: -71.6136,
 };
 
+async function readJson(response) {
+  try {
+    return await response.json();
+  } catch {
+    return {};
+  }
+}
+
 function App() {
   const [alerts, setAlerts] = useState([]);
   const [backendOk, setBackendOk] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
+  const [noticeType, setNoticeType] = useState('info');
 
   const loadAlerts = useCallback(async () => {
     try {
       const response = await fetch(`${API}/api/alerts`);
-      if (!response.ok) throw new Error('No se pudieron cargar las alertas');
-      const data = await response.json();
+      const data = await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'No se pudieron cargar las alertas.');
+      }
+
       setAlerts(data);
       setBackendOk(true);
     } catch {
@@ -39,18 +54,29 @@ function App() {
   async function simulateSmoke() {
     setLoading(true);
     setNotice('');
+
     try {
       const response = await fetch(`${API}/api/sensors/detections`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(DEMO_DETECTION),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'Error al crear la alerta');
-      setNotice(data.message);
+      const data = await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Error al crear la alerta.');
+      }
+
+      setBackendOk(true);
+      setNoticeType('success');
+      setNotice(data.message || 'Alerta registrada correctamente.');
       await loadAlerts();
     } catch (error) {
-      setNotice(`Error: ${error.message}`);
+      setBackendOk(false);
+      setNoticeType('error');
+      setNotice(
+        `Error: ${error.message || 'No se pudo conectar con la API. Verifica que el backend esté ejecutándose.'}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -58,18 +84,26 @@ function App() {
 
   async function dispatch(alertId) {
     setNotice('');
+
     try {
       const response = await fetch(`${API}/api/alerts/${alertId}/dispatch`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ unit: 'BRAVO-1' }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'No fue posible despachar la unidad');
+      const data = await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'No fue posible despachar la unidad.');
+      }
+
+      setBackendOk(true);
+      setNoticeType('success');
       setNotice(`Unidad BRAVO-1 despachada a la alerta #${alertId}.`);
       await loadAlerts();
     } catch (error) {
-      setNotice(`Error: ${error.message}`);
+      setNoticeType('error');
+      setNotice(`Error: ${error.message || 'No se pudo completar el despacho.'}`);
     }
   }
 
@@ -77,9 +111,9 @@ function App() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">PYROGUARD Â· HU-01 Â· RF01</p>
+          <p className="eyebrow">PYROGUARD · HU-01 · RF01</p>
           <h1>Central de Emergencias</h1>
-          <p className="subtitle">Alerta automÃ¡tica por detecciÃ³n de humo</p>
+          <p className="subtitle">Alerta automática por detección de humo</p>
         </div>
         <div className={`api-status ${backendOk ? 'online' : 'offline'}`}>
           <span className="dot" />
@@ -93,18 +127,22 @@ function App() {
             <p className="section-label">Simulador de sensor IoT</p>
             <h2>Probar el flujo completo de la HU-01</h2>
             <p>
-              Simula un sensor en Camino La PÃ³lvora con nivel de humo 82. La API registra la
-              alerta y la muestra inmediatamente en el panel del operador.
+              Simula una detección del sensor PG-VALPO-01 en Camino La Pólvora con un nivel de
+              humo de 82%. La API registra la alerta y el panel la actualiza automáticamente.
             </p>
           </div>
           <button onClick={simulateSmoke} disabled={loading}>
-            {loading ? 'Enviando...' : 'Simular detecciÃ³n de humo'}
+            {loading ? 'Enviando...' : 'Simular detección de humo'}
           </button>
         </section>
 
-        {notice && <div className="notice">{notice}</div>}
+        {notice && (
+          <div className={`notice ${noticeType}`} role="status" aria-live="polite">
+            {notice}
+          </div>
+        )}
 
-        <section className="summary-grid">
+        <section className="summary-grid" aria-label="Resumen de alertas">
           <article>
             <span>Alertas registradas</span>
             <strong>{alerts.length}</strong>
@@ -133,7 +171,7 @@ function App() {
           {alerts.length === 0 ? (
             <div className="empty-state">
               <strong>No hay alertas activas.</strong>
-              <span>Usa el simulador para generar una detecciÃ³n de prueba.</span>
+              <span>Usa el simulador para generar una detección de prueba.</span>
             </div>
           ) : (
             <div className="alert-list">
@@ -142,10 +180,10 @@ function App() {
                   <div className="alert-header">
                     <div>
                       <span className={`priority ${alert.priority.toLowerCase()}`}>{alert.priority}</span>
-                      <h3>Alerta #{alert.id} Â· {alert.sector}</h3>
+                      <h3>Alerta #{alert.id} · {alert.sector}</h3>
                     </div>
                     <span className={`status ${alert.status === 'PENDIENTE' ? 'pending' : 'dispatched'}`}>
-                      {alert.status.replace('_', ' ')}
+                      {alert.status.replaceAll('_', ' ')}
                     </span>
                   </div>
 
@@ -159,7 +197,7 @@ function App() {
                   </dl>
 
                   <div className="alert-footer">
-                    <small>{new Date(alert.detected_at).toLocaleString()}</small>
+                    <small>{new Date(alert.detected_at).toLocaleString('es-CL')}</small>
                     {alert.status === 'PENDIENTE' ? (
                       <button onClick={() => dispatch(alert.id)}>Despachar BRAVO-1</button>
                     ) : (
@@ -177,5 +215,3 @@ function App() {
 }
 
 export default App;
-
-
