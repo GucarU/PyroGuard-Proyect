@@ -7,4 +7,4 @@ venv/
 .env
 
 .DS_Store
-Thumbs.db
+Thumbs.dbsrc/database/pyroguard.db
