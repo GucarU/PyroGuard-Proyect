@@ -1,41 +1,35 @@
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import { CircleMarker, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
-function isWindAlert(alert) {
-  return String(alert.user_story || '').includes('04') || String(alert.message || '').toLowerCase().includes('vientos fuertes');
-}
+const windIcon = L.divIcon({
+  className: 'wind-map-icon',
+  html: '<span>💨</span>',
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+})
 
-function markerStyle(alert) {
-  if (isWindAlert(alert)) return { color: '#a78bfa', fillColor: '#8b5cf6', fillOpacity: 0.9, weight: 3 };
-  if (alert.priority === 'ALTA') return { color: '#ff725e', fillColor: '#ef4444', fillOpacity: 0.88, weight: 3 };
-  if (alert.priority === 'MEDIA') return { color: '#ffd36a', fillColor: '#f59e0b', fillOpacity: 0.88, weight: 3 };
-  return { color: '#75e6b6', fillColor: '#22c55e', fillOpacity: 0.88, weight: 3 };
-}
-
-export default function AlertMap({ alerts, onViewTemperature }) {
+export default function AlertMap({ alerts, sensorStatuses = [] }) {
   const validAlerts = alerts.filter(
-    (alert) => Number.isFinite(Number(alert.latitude)) && Number.isFinite(Number(alert.longitude)),
-  );
+    (alert) => alert.latitude != null && alert.longitude != null,
+  )
+  const windSensors = sensorStatuses.filter(
+    (sensor) => sensor.wind_alert && sensor.latitude != null && sensor.longitude != null,
+  )
 
   return (
-    <section className="map-section">
-      <div className="map-heading">
+    <section className="map-section alerts-section">
+      <div className="section-heading">
         <div>
-          <p className="section-label">HU-01 · HU-03 · HU-04</p>
-          <h2>Mapa de alertas y sensores</h2>
-        </div>
-        <div className="map-legend" aria-label="Leyenda del mapa">
-          <span><i className="legend-dot high" /> Alta</span>
-          <span><i className="legend-dot medium" /> Media</span>
-          <span><i className="legend-dot low" /> Baja</span>
-          <span><i className="legend-dot wind" /> Viento &gt; 40 km/h</span>
+          <p className="section-label">Mapa operacional</p>
+          <h2>Alertas e indicadores de viento</h2>
         </div>
       </div>
 
       <MapContainer
         center={[-33.0472, -71.6127]}
         zoom={11}
-        style={{ height: '390px', width: '100%' }}
+        style={{ height: '380px', width: '100%', borderRadius: '16px' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -43,30 +37,31 @@ export default function AlertMap({ alerts, onViewTemperature }) {
         />
 
         {validAlerts.map((alert) => (
-          <CircleMarker
-            key={alert.id}
-            center={[Number(alert.latitude), Number(alert.longitude)]}
-            radius={11}
-            pathOptions={markerStyle(alert)}
-          >
+          <CircleMarker key={alert.id} center={[alert.latitude, alert.longitude]} radius={10}>
             <Popup>
-              <div className="map-popup">
-                <strong>{alert.sensor_id}</strong>
-                <span>Sector: {alert.sector}</span>
-                <span>Nivel de humo: {alert.smoke_level}%</span>
-                <span>Prioridad: {alert.priority}</span>
-                <span>Estado: {String(alert.status).replaceAll('_', ' ')}</span>
-                {isWindAlert(alert) && <b className="wind-warning">⚠ Viento superior a 40 km/h</b>}
-                {alert.sensor_id !== 'APP_VECINAL' && (
-                  <button type="button" className="map-popup-button" onClick={() => onViewTemperature?.(alert.sensor_id)}>
-                    Ver temperatura
-                  </button>
-                )}
-              </div>
+              <strong>{alert.sensor_id}</strong><br />
+              Sector: {alert.sector}<br />
+              Nivel de humo: {alert.smoke_level}%<br />
+              Estado: {alert.status}
             </Popup>
           </CircleMarker>
         ))}
+
+        {windSensors.map((sensor) => (
+          <Marker
+            key={`wind-${sensor.sensor_id}`}
+            position={[sensor.latitude, sensor.longitude]}
+            icon={windIcon}
+          >
+            <Popup>
+              <strong>Advertencia de viento · {sensor.sensor_id}</strong><br />
+              {sensor.sector}<br />
+              Velocidad: {sensor.wind_speed_kmh} km/h<br />
+              Umbral: {sensor.wind_threshold_kmh} km/h
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </section>
-  );
+  )
 }
