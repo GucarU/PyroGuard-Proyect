@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import AlertMap from './AlertMap'
-import NeighborhoodReport from './NeighborhoodReport'
-import SensorPanel from './SensorPanel'
-import ShelterPanel from './ShelterPanel'
+import AlertMap from './components/AlertMap'
+import NeighborhoodReport from './components/NeighborhoodReport'
+import SensorPanel from './components/SensorPanel'
+import ShelterPanel from './components/ShelterPanel'
 
 const API = 'http://127.0.0.1:8000'
 

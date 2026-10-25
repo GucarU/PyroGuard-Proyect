@@ -3,7 +3,7 @@ import sqlite3
 
 import pytest
 
-from src.backend import main
+from backend import main
 
 
 DETECTION = {
