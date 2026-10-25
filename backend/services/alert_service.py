@@ -34,7 +34,7 @@ class AlertPersistenceError(Exception):
 
 def _open_db_connection():
     """Abre la conexión manteniendo compatibilidad con las pruebas de HU-01."""
-    main_module = sys.modules.get("src.backend.main")
+    main_module = sys.modules.get("backend.main")
     connector = getattr(main_module, "db_connection", database.db_connection)
     return connector()
 def priority_for(smoke_level: int) -> Priority:

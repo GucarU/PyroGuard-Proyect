@@ -33,7 +33,7 @@ Este incremento se integró sobre la rama refactorizada por capas del backend. S
 - API: `POST /api/reports/neighborhood` (multipart) y `GET /api/reports/neighborhood`.
 - La interfaz permite usar cámara/selector de archivo, obtener GPS del navegador y enviar foto + coordenadas + descripción.
 - Formatos permitidos: JPG, JPEG, PNG y WEBP; máximo 5 MB.
-- Las fotos se guardan en `src/backend/uploads/` y el registro queda con estado `PENDIENTE`.
+- Las fotos se guardan en `backend/uploads/` y el registro queda con estado `PENDIENTE`.
 
 ## HU-15 — Actualizar cupos en albergues
 
@@ -52,18 +52,18 @@ router -> service -> repository -> SQLite
 Archivos principales nuevos:
 
 ```text
-src/backend/repositories/sensor_repository.py
-src/backend/repositories/report_repository.py
-src/backend/repositories/shelter_repository.py
-src/backend/services/sensor_service.py
-src/backend/services/report_service.py
-src/backend/services/shelter_service.py
-src/backend/routers/reports.py
-src/backend/routers/shelters.py
-src/frontend/src/SensorPanel.jsx
-src/frontend/src/TemperatureModal.jsx
-src/frontend/src/NeighborhoodReport.jsx
-src/frontend/src/ShelterPanel.jsx
+backend/repositories/sensor_repository.py
+backend/repositories/report_repository.py
+backend/repositories/shelter_repository.py
+backend/services/sensor_service.py
+backend/services/report_service.py
+backend/services/shelter_service.py
+backend/routers/reports.py
+backend/routers/shelters.py
+frontend/src/components/SensorPanel.jsx
+frontend/src/components/TemperatureModal.jsx
+frontend/src/components/NeighborhoodReport.jsx
+frontend/src/components/ShelterPanel.jsx
 tests/test_jose_hu.py
 ```
 

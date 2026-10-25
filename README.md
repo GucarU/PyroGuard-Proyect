@@ -34,13 +34,13 @@ Desde la raíz del repositorio:
 ```powershell
 python -m pip install -r requirements.txt
 python -m pytest -q
-python -m uvicorn src.backend.main:app --reload
+python -m uvicorn backend.main:app --reload
 ```
 
 En otra ventana de PowerShell:
 
 ```powershell
-cd src\frontend
+cd frontend
 npm install
 npm run dev
 ```

@@ -12,6 +12,6 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setenv("PYROGUARD_UPLOAD_DIR", str(tmp_path / "uploads"))
     monkeypatch.setenv("WIND_ALERT_THRESHOLD_KMH", "40")
     monkeypatch.setenv("PYROGUARD_ENV", "dev")
-    from src.backend.main import app
+    from backend.main import app
 
     return TestClient(app)

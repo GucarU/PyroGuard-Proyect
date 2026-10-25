@@ -1,5 +1,5 @@
 @echo off
-cd /d "%~dp0src\frontend"
+cd /d "%~dp0frontend"
 npm install
 npm run dev
 pause

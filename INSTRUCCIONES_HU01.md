@@ -5,7 +5,7 @@ Desde la carpeta raíz del proyecto:
 
 ```powershell
 python -m pip install -r requirements.txt
-python -m uvicorn src.backend.main:app --reload
+python -m uvicorn backend.main:app --reload
 ```
 
 Abrir Swagger:
@@ -16,7 +16,7 @@ Abrir Swagger:
 Abrir una segunda terminal:
 
 ```powershell
-cd src\frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -40,10 +40,10 @@ La prioridad del backend es `ALTA` con nivel de humo ≥ 70, `MEDIA` entre 40 y 
 Con el backend activo, desde la raíz del repositorio:
 
 ```powershell
-python src\simulador\sensor_simulador.py --modo humo
-python src\simulador\sensor_simulador.py --modo sin-humo
-python src\simulador\sensor_simulador.py --modo invalido
-python src\simulador\sensor_simulador.py --modo aleatorio --cantidad 5 --intervalo 3
+python simulador\sensor_simulador.py --modo humo
+python simulador\sensor_simulador.py --modo sin-humo
+python simulador\sensor_simulador.py --modo invalido
+python simulador\sensor_simulador.py --modo aleatorio --cantidad 5 --intervalo 3
 ```
 
 El modo inválido envía `smoke_level: 150` para mostrar la respuesta 422. El simulador comunica directamente con la API y no depende del panel.
