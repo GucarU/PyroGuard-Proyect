@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const API = 'http://127.0.0.1:8000'
+const API = '' // Proxy /api de Vite, también compatible con acceso por red local
 
 export default function NeighborhoodReport() {
   const [photo, setPhoto] = useState(null)

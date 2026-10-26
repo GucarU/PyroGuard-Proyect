@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import TemperatureModal from './TemperatureModal'
 
-const API = 'http://127.0.0.1:8000'
+const API = '' // Proxy /api de Vite, también compatible con acceso por red local
 
 export default function SensorPanel({ onStatusesChange }) {
   const [sensors, setSensors] = useState([])
@@ -47,7 +47,7 @@ export default function SensorPanel({ onStatusesChange }) {
             <p className="section-label">JOSÉ · HU-02 / HU-03 / HU-04</p>
             <h2>Monitoreo de sensores</h2>
           </div>
-          <button className="secondary" onClick={loadSensors}>Actualizar</button>
+          <button className="secondary" onClick={() => loadSensors().catch(error => setMessage(error.message))}>Actualizar</button>
         </div>
 
         {message && <div className="mini-notice">{message}</div>}
