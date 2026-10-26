@@ -13,6 +13,24 @@ export default function ShelterPanel() {
     setShelters(data)
   }
 
+  async function toggleStatus(shelter) {
+    const status = shelter.status === 'ABIERTO' ? 'CERRADO' : 'ABIERTO'
+    setMessage('')
+    try {
+      const response = await fetch(`${API}/api/shelters/${shelter.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.detail || 'No fue posible cambiar el estado')
+      setMessage(`${data.name}: ${status === 'ABIERTO' ? 'abierto' : 'cerrado'}.`)
+      await loadShelters()
+    } catch (error) {
+      setMessage(`Error: ${error.message}`)
+    }
+  }
+
   useEffect(() => {
     loadShelters().catch((error) => setMessage(error.message))
   }, [])
@@ -46,13 +64,16 @@ export default function ShelterPanel() {
       {message && <div className="mini-notice">{message}</div>}
       <div className="shelter-grid">
         {shelters.map((shelter) => (
-          <article className={`shelter-card ${shelter.full ? 'shelter-full' : ''}`} key={shelter.id}>
+          <article className={`shelter-card ${shelter.full || shelter.status === 'CERRADO' ? 'shelter-full' : ''}`} key={shelter.id}>
             <div>
               <strong>{shelter.name}</strong>
-              <span>{shelter.full ? 'LLENO' : `${shelter.available_slots} cupos disponibles`}</span>
+              <span>{shelter.status === 'CERRADO' ? 'CERRADO' : shelter.full ? 'LLENO' : `${shelter.available_slots} cupos disponibles`}</span>
             </div>
             <div className="occupancy-number">{shelter.occupancy}/{shelter.capacity}</div>
             <div className="button-row">
+              <button className="secondary small-button" onClick={() => toggleStatus(shelter)}>
+                {shelter.status === 'ABIERTO' ? 'Cerrar albergue' : 'Abrir albergue'}
+              </button>
               <button className="secondary small-button" onClick={() => change(shelter.id, -1)}>-1</button>
               <button className="small-button" onClick={() => change(shelter.id, 1)}>+1</button>
             </div>

@@ -96,6 +96,10 @@ textarea { min-height: 90px; resize: vertical; }
 .shelter-full { background: #241417; }
 .occupancy-number { font-size: 2rem; font-weight: 900; }
 .wind-map-icon { display: grid !important; place-items: center; background: #14262c; border: 2px solid #ffd36a; border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-size: 20px; }
+.shelter-map-icon { display: grid !important; place-items: center; background: #14382e; border: 2px solid #42d392; border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-size: 20px; }
+.water-request-list { display: grid; gap: 10px; margin-top: 20px; }
+.water-request-card { display: grid; gap: 5px; padding: 14px; border: 1px solid #293c43; border-radius: 12px; background: #0c171b; }
+.water-request-card span, .water-request-card p { color: #9fb2ba; margin: 0; }
 .map-section { overflow: hidden; }
 
 @media (max-width: 760px) {

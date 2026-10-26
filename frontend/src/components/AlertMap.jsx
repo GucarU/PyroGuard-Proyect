@@ -9,7 +9,14 @@ const windIcon = L.divIcon({
   iconAnchor: [18, 18],
 })
 
-export default function AlertMap({ alerts, sensorStatuses = [] }) {
+const shelterIcon = L.divIcon({
+  className: 'shelter-map-icon',
+  html: '<span>🏠</span>',
+  iconSize: [38, 38],
+  iconAnchor: [19, 19],
+})
+
+export default function AlertMap({ alerts, sensorStatuses = [], shelters = [] }) {
   const validAlerts = alerts.filter(
     (alert) => alert.latitude != null && alert.longitude != null,
   )
@@ -58,6 +65,21 @@ export default function AlertMap({ alerts, sensorStatuses = [] }) {
               {sensor.sector}<br />
               Velocidad: {sensor.wind_speed_kmh} km/h<br />
               Umbral: {sensor.wind_threshold_kmh} km/h
+            </Popup>
+          </Marker>
+        ))}
+
+        {shelters.filter((shelter) => shelter.latitude != null && shelter.longitude != null).map((shelter) => (
+          <Marker
+            key={`shelter-${shelter.id}`}
+            position={[shelter.latitude, shelter.longitude]}
+            icon={shelterIcon}
+          >
+            <Popup>
+              <strong>{shelter.name}</strong><br />
+              Estado: {shelter.status}<br />
+              Ocupación: {shelter.occupancy}/{shelter.capacity}<br />
+              Cupos disponibles: {shelter.available_slots}
             </Popup>
           </Marker>
         ))}

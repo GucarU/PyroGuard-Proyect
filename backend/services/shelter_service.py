@@ -53,6 +53,7 @@ def _to_shelter(row) -> Shelter:
         occupancy=row["occupancy"],
         available_slots=available,
         full=row["occupancy"] >= row["capacity"],
+        status=row["status"],
         latitude=row["latitude"],
         longitude=row["longitude"],
         updated_at=row["updated_at"],
@@ -75,4 +76,13 @@ def change_occupancy(shelter_id: int, delta: int) -> Shelter:
         if new_occupancy < 0 or new_occupancy > row["capacity"]:
             raise ShelterCapacityError(shelter_id)
         updated = shelter_repository.update_occupancy(conn, shelter_id, new_occupancy, _now())
+        return _to_shelter(updated)
+
+
+def change_status(shelter_id: int, status: str) -> Shelter:
+    with db_connection() as conn:
+        _seed_shelters_if_empty(conn)
+        updated = shelter_repository.update_status(conn, shelter_id, status, _now())
+        if updated is None:
+            raise ShelterNotFoundError(shelter_id)
         return _to_shelter(updated)

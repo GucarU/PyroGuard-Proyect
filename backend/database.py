@@ -73,9 +73,22 @@ CREATE TABLE IF NOT EXISTS albergues (
     name TEXT NOT NULL,
     capacity INTEGER NOT NULL CHECK(capacity > 0),
     occupancy INTEGER NOT NULL DEFAULT 0 CHECK(occupancy >= 0),
+    status TEXT NOT NULL DEFAULT 'ABIERTO' CHECK(status IN ('ABIERTO', 'CERRADO')),
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     updated_at TEXT NOT NULL
+)
+"""
+
+CREATE_SOLICITUDES_AGUA_TABLE = """
+CREATE TABLE IF NOT EXISTS solicitudes_agua (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    requester TEXT NOT NULL,
+    latitude REAL NOT NULL CHECK(latitude BETWEEN -90 AND 90),
+    longitude REAL NOT NULL CHECK(longitude BETWEEN -180 AND 180),
+    description TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK(status IN ('PENDIENTE', 'EN_ATENCION', 'RESUELTA')),
+    created_at TEXT NOT NULL
 )
 """
 
@@ -85,6 +98,7 @@ SCHEMA_STATEMENTS = (
     CREATE_TEMPERATURAS_TABLE,
     CREATE_REPORTES_VECINALES_TABLE,
     CREATE_ALBERGUES_TABLE,
+    CREATE_SOLICITUDES_AGUA_TABLE,
 )
 
 
@@ -103,6 +117,13 @@ def get_connection() -> sqlite3.Connection:
         connection.execute("PRAGMA foreign_keys = ON")
         for statement in SCHEMA_STATEMENTS:
             connection.execute(statement)
+        shelter_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(albergues)")
+        }
+        if "status" not in shelter_columns:
+            connection.execute(
+                "ALTER TABLE albergues ADD COLUMN status TEXT NOT NULL DEFAULT 'ABIERTO'"
+            )
     except Exception:
         connection.close()
         raise
