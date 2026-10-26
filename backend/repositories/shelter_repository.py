@@ -17,13 +17,14 @@ def insert_shelter(
     latitude: float,
     longitude: float,
     updated_at: str,
+    status: str = "ABIERTO",
 ) -> None:
     conn.execute(
         """
-        INSERT INTO albergues (name, capacity, occupancy, latitude, longitude, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO albergues (name, capacity, occupancy, status, latitude, longitude, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (name, capacity, occupancy, latitude, longitude, updated_at),
+        (name, capacity, occupancy, status, latitude, longitude, updated_at),
     )
 
 
@@ -41,6 +42,18 @@ def update_occupancy(
     cursor = conn.execute(
         "UPDATE albergues SET occupancy = ?, updated_at = ? WHERE id = ?",
         (occupancy, updated_at, shelter_id),
+    )
+    if cursor.rowcount == 0:
+        return None
+    return get_shelter(conn, shelter_id)
+
+
+def update_status(
+    conn: sqlite3.Connection, shelter_id: int, status: str, updated_at: str
+) -> sqlite3.Row | None:
+    cursor = conn.execute(
+        "UPDATE albergues SET status = ?, updated_at = ? WHERE id = ?",
+        (status, updated_at, shelter_id),
     )
     if cursor.rowcount == 0:
         return None

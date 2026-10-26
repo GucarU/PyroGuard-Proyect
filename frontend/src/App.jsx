@@ -3,6 +3,7 @@ import AlertMap from './components/AlertMap'
 import NeighborhoodReport from './components/NeighborhoodReport'
 import SensorPanel from './components/SensorPanel'
 import ShelterPanel from './components/ShelterPanel'
+import WaterRequestPanel from './components/WaterRequestPanel'
 
 const API = 'http://127.0.0.1:8000'
 
@@ -18,6 +19,7 @@ const DEMO_DETECTION = {
 function App() {
   const [alerts, setAlerts] = useState([])
   const [sensorStatuses, setSensorStatuses] = useState([])
+  const [shelters, setShelters] = useState([])
   const [backendOk, setBackendOk] = useState(false)
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState('')
@@ -34,11 +36,25 @@ function App() {
     }
   }, [])
 
+  const loadShelters = useCallback(async () => {
+    try {
+      const response = await fetch(`${API}/api/shelters`)
+      if (response.ok) setShelters(await response.json())
+    } catch {
+      // El mapa sigue disponible aunque el módulo de albergues no responda.
+    }
+  }, [])
+
   useEffect(() => {
     loadAlerts()
+    loadShelters()
     const timer = setInterval(loadAlerts, 4000)
-    return () => clearInterval(timer)
-  }, [loadAlerts])
+    const shelterTimer = setInterval(loadShelters, 10000)
+    return () => {
+      clearInterval(timer)
+      clearInterval(shelterTimer)
+    }
+  }, [loadAlerts, loadShelters])
 
   async function simulateSmoke() {
     setLoading(true)
@@ -116,7 +132,7 @@ function App() {
 
         <SensorPanel onStatusesChange={setSensorStatuses} />
 
-        <AlertMap alerts={alerts} sensorStatuses={sensorStatuses} />
+        <AlertMap alerts={alerts} sensorStatuses={sensorStatuses} shelters={shelters} />
 
         <section className="alerts-section">
           <div className="section-heading">
@@ -169,6 +185,7 @@ function App() {
 
         <NeighborhoodReport />
         <ShelterPanel />
+        <WaterRequestPanel />
       </main>
     </div>
   )

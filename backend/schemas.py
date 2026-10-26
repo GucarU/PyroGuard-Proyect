@@ -87,6 +87,10 @@ class ShelterOccupancyUpdate(BaseModel):
     delta: int = Field(ge=-1000, le=1000)
 
 
+class ShelterStatusUpdate(BaseModel):
+    status: Literal["ABIERTO", "CERRADO"]
+
+
 class Shelter(BaseModel):
     id: int
     name: str
@@ -94,6 +98,24 @@ class Shelter(BaseModel):
     occupancy: int
     available_slots: int
     full: bool
+    status: Literal["ABIERTO", "CERRADO"]
     latitude: float
     longitude: float
     updated_at: str
+
+
+class WaterRequestCreate(BaseModel):
+    requester: str = Field(min_length=1, max_length=100)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    description: str = Field(default="", max_length=500)
+
+
+class WaterRequest(BaseModel):
+    id: int
+    requester: str
+    latitude: float
+    longitude: float
+    description: str
+    status: Literal["PENDIENTE", "EN_ATENCION", "RESUELTA"]
+    created_at: str
