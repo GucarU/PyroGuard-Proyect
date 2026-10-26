@@ -1,57 +1,14 @@
-# PyroGuard
+# PyroGuard — Hito 2
 
-Sistema de alerta temprana y coordinación logística para incendios forestales en Valparaíso y Viña del Mar.
+Prototipo académico de detección temprana, alertas y coordinación logística de incendios forestales, contextualizado en Valparaíso y Viña del Mar.
 
-Este código conserva **HU-01** (alerta automática por humo) y agrega el desarrollo asignado a **José Marabolí**: **HU-02, HU-03, HU-04, HU-12 y HU-15**.
+**Inicio rápido:** consulta [`GUIA_INICIO_HITO2.md`](GUIA_INICIO_HITO2.md). Desde Windows también puedes abrir `INICIAR_BACKEND.bat` y `INICIAR_FRONTEND.bat` en dos ventanas.
 
-## Equipo
+- API Python/FastAPI y base SQLite en `backend/`.
+- Frontend React/Vite en `frontend/`.
+- Test Python en `tests/`. Pruebas de React junto a componentes en `frontend/src/components/`.
+- Simulador y archivos de referencia en `simulador/`, `database/` y `docs/`.
 
-- Iván Mandiola
-- Maximiliano Ávila
-- José Luis Marabolí
+**Alcance:** conserva módulos originales del equipo e incluye avances Hito 2 de HU-05, HU-06, HU-08, HU-10, HU-14 (detalles en [`docs/hito2/FRONTEND_MAXI_CAMBIOS.md`](docs/hito2/FRONTEND_MAXI_CAMBIOS.md)).
 
-## Tecnologías
-
-- API: Python + FastAPI
-- Persistencia: SQLite
-- Panel web: React + Vite
-- Mapa: Leaflet / React Leaflet
-- Gráfico de temperatura: Recharts
-- Pruebas: pytest + FastAPI TestClient
-
-## Arquitectura backend
-
-La rama refactorizada organiza el backend por capas:
-
-```text
-routers -> services -> repositories -> SQLite
-```
-
-## Ejecutar en Windows
-
-Desde la raíz del repositorio:
-
-```powershell
-python -m pip install -r requirements.txt
-python -m pytest -q
-python -m uvicorn backend.main:app --reload
-```
-
-En otra ventana de PowerShell:
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Abrir:
-
-- Panel: `http://127.0.0.1:5173`
-- Swagger: `http://127.0.0.1:8000/docs`
-
-## Parte de José
-
-La explicación técnica, endpoints, reglas y evidencias sugeridas se encuentran en:
-
-`docs/PARTE_JOSE.md`
+**Aviso:** es un entorno académico y **no está conectado con servicios de emergencia reales**. La selección de rol es solo una simulación; no hay autenticación de usuarios ni catastro certificado de grifos. No usar en emergencias reales.

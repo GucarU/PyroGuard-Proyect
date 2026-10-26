@@ -1,4 +1,6 @@
 """Endpoints de sensores: HU-01, HU-02, HU-03 y HU-04."""
+from datetime import datetime
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from ..schemas import (
@@ -79,9 +81,9 @@ def add_temperature(sensor_id: str, request: TemperatureCreate):
     "/api/sensors/{sensor_id}/temperature-history",
     response_model=list[TemperatureReading],
 )
-def temperature_history(sensor_id: str, limit: int = Query(default=20, ge=1, le=100)):
+def temperature_history(sensor_id: str, limit: int = Query(default=1000, ge=1, le=2000), since: datetime | None = None):
     """HU-03: entrega las últimas lecturas para construir el gráfico."""
     try:
-        return sensor_service.temperature_history(sensor_id, limit)
+        return sensor_service.temperature_history(sensor_id, limit, since.isoformat() if since else None)
     except sensor_service.SensorNotFoundError:
         raise HTTPException(status_code=404, detail="Sensor no encontrado.")

@@ -30,11 +30,15 @@ class Alert(BaseModel):
     latitude: float
     longitude: float
     priority: Literal["BAJA", "MEDIA", "ALTA"]
-    status: Literal["PENDIENTE", "UNIDAD_DESPACHADA"]
+    status: Literal["PENDIENTE", "UNIDAD_DESPACHADA", "VALIDADO", "FALSA_ALARMA"]
     message: str
     detected_at: str
     dispatched_at: str | None = None
     dispatched_unit: str | None = None
+    validated_by: str | None = None
+    validated_at: str | None = None
+    discarded_by: str | None = None
+    discarded_at: str | None = None
 
 
 # HU-02 / HU-03 / HU-04
@@ -118,4 +122,35 @@ class WaterRequest(BaseModel):
     longitude: float
     description: str
     status: Literal["PENDIENTE", "EN_ATENCION", "RESUELTA"]
+    created_at: str
+
+
+# Operaciones del panel y pruebas Hito 2
+class ActorAction(BaseModel):
+    actor: str = Field(min_length=2, max_length=80)
+
+class SafeCheckinCreate(BaseModel):
+    alias: str = Field(min_length=2, max_length=80)
+    sector: str = Field(min_length=2, max_length=120)
+
+class SafeCheckin(BaseModel):
+    id: int
+    alias: str
+    sector: str
+    status: Literal["A_SALVO"]
+    reported_at: str
+
+class HydrantCreate(BaseModel):
+    name: str = Field(min_length=3, max_length=120)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    status: Literal["DISPONIBLE", "SIN_AGUA", "EN_REVISION"] = "EN_REVISION"
+
+class Hydrant(BaseModel):
+    id: int
+    name: str
+    latitude: float
+    longitude: float
+    status: Literal["DISPONIBLE", "SIN_AGUA", "EN_REVISION"]
+    demo: bool
     created_at: str

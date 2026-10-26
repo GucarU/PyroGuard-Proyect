@@ -6,14 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .database import db_connection  # alias conservado para tests/compatibilidad HU-01
-from .routers import alerts, dev, reports, sensors, shelters, system, water
+from .routers import alerts, dev, operations, reports, sensors, shelters, system, water
 from .services.report_service import DEFAULT_UPLOAD_DIR
 
 app = FastAPI(
     title="PyroGuard API",
     version="0.2.0",
     description=(
-        "API PyroGuard con HU-01, HU-02, HU-03, HU-04, HU-12, HU-13, HU-15 y HU-16."
+        "API del prototipo PyroGuard con HU-01, 02, 03, 04, 05, 06, 08, 10, 12, 13, 14, 15 y 16. Datos de prueba."
     ),
 )
 
@@ -35,4 +35,5 @@ app.include_router(alerts.router)
 app.include_router(reports.router)
 app.include_router(shelters.router)
 app.include_router(water.router)
+app.include_router(operations.router)
 app.include_router(dev.router)

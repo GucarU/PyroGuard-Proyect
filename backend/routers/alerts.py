@@ -1,5 +1,5 @@
 """Endpoints de consulta y despacho de alertas."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from ..schemas import Alert, DispatchRequest
 from ..services import alert_service
@@ -8,8 +8,9 @@ router = APIRouter(prefix="/api/alerts", tags=["Alertas"])
 
 
 @router.get("", response_model=list[Alert])
-def list_alerts():
-    return alert_service.list_alerts()
+def list_alerts(sector: str | None = Query(default=None, max_length=120)):
+    alerts = alert_service.list_alerts()
+    return [a for a in alerts if a.sector.strip().casefold() == sector.strip().casefold()] if sector else alerts
 
 
 @router.get("/{alert_id}", response_model=Alert)

@@ -105,11 +105,11 @@ def add_temperature(sensor_id: str, temperature_c: float) -> TemperatureReading:
         return TemperatureReading(**dict(row))
 
 
-def temperature_history(sensor_id: str, limit: int = 20) -> list[TemperatureReading]:
-    limit = max(1, min(limit, 100))
+def temperature_history(sensor_id: str, limit: int = 20, since: str | None = None) -> list[TemperatureReading]:
+    limit = max(1, min(limit, 2000))
     with db_connection() as conn:
         _seed_sensors_if_empty(conn)
         if sensor_repository.get_sensor(conn, sensor_id) is None:
             raise SensorNotFoundError(sensor_id)
-        rows = sensor_repository.list_temperature_history(conn, sensor_id, limit)
+        rows = sensor_repository.list_temperature_history(conn, sensor_id, limit, since)
         return [TemperatureReading(**dict(row)) for row in rows]

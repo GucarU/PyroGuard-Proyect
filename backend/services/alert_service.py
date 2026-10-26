@@ -1,4 +1,4 @@
-﻿"""Dominio: reglas de negocio de HU-01 (RF01).
+"""Dominio: reglas de negocio de HU-01 (RF01).
 
 AquÃ­ viven las reglas: solo hay alerta si hay humo, la prioridad se calcula
 segÃºn el nivel de humo y una alerta no se despacha dos veces. No conoce HTTP:
@@ -95,7 +95,7 @@ def dispatch_unit(alert_id: int, request: DispatchRequest) -> Alert:
         alert = alert_repository.get_alert(conn, alert_id)
         if alert is None:
             raise AlertNotFoundError(alert_id)
-        if alert.status == "UNIDAD_DESPACHADA":
+        if alert.status != "PENDIENTE":
             raise AlertAlreadyDispatchedError(alert_id)
         return alert_repository.mark_dispatched(conn, alert_id, request.unit, dispatched_at)
 

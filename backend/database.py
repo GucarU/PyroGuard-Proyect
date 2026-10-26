@@ -92,6 +92,28 @@ CREATE TABLE IF NOT EXISTS solicitudes_agua (
 )
 """
 
+CREATE_SAFE_CHECKINS_TABLE = """
+CREATE TABLE IF NOT EXISTS reportes_a_salvo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alias TEXT NOT NULL,
+    sector TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'A_SALVO',
+    reported_at TEXT NOT NULL
+)
+"""
+
+CREATE_HYDRANTS_TABLE = """
+CREATE TABLE IF NOT EXISTS grifos_demo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    latitude REAL NOT NULL CHECK(latitude BETWEEN -90 AND 90),
+    longitude REAL NOT NULL CHECK(longitude BETWEEN -180 AND 180),
+    status TEXT NOT NULL CHECK(status IN ('DISPONIBLE','SIN_AGUA','EN_REVISION')),
+    demo INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL
+)
+"""
+
 SCHEMA_STATEMENTS = (
     CREATE_ALERTAS_TABLE,
     CREATE_SENSORES_ESTADO_TABLE,
@@ -99,6 +121,8 @@ SCHEMA_STATEMENTS = (
     CREATE_REPORTES_VECINALES_TABLE,
     CREATE_ALBERGUES_TABLE,
     CREATE_SOLICITUDES_AGUA_TABLE,
+    CREATE_SAFE_CHECKINS_TABLE,
+    CREATE_HYDRANTS_TABLE,
 )
 
 
@@ -117,6 +141,11 @@ def get_connection() -> sqlite3.Connection:
         connection.execute("PRAGMA foreign_keys = ON")
         for statement in SCHEMA_STATEMENTS:
             connection.execute(statement)
+        # Migración compatible con bases SQLite existentes: nunca borra alertas.
+        alert_columns = {row["name"] for row in connection.execute("PRAGMA table_info(alertas)")}
+        for field in ("validated_by", "validated_at", "discarded_by", "discarded_at"):
+            if field not in alert_columns:
+                connection.execute(f"ALTER TABLE alertas ADD COLUMN {field} TEXT")
         shelter_columns = {
             row["name"] for row in connection.execute("PRAGMA table_info(albergues)")
         }

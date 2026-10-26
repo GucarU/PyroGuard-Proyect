@@ -77,15 +77,17 @@ def insert_temperature(
 
 
 def list_temperature_history(
-    conn: sqlite3.Connection, sensor_id: str, limit: int
+    conn: sqlite3.Connection, sensor_id: str, limit: int, since: str | None = None
 ) -> list[sqlite3.Row]:
-    rows = conn.execute(
-        """
-        SELECT * FROM sensor_temperaturas
-        WHERE sensor_id = ?
-        ORDER BY id DESC
-        LIMIT ?
-        """,
-        (sensor_id, limit),
-    ).fetchall()
+    if since:
+        rows = conn.execute("""
+            SELECT * FROM sensor_temperaturas
+            WHERE sensor_id = ? AND recorded_at >= ?
+            ORDER BY id DESC LIMIT ?
+        """, (sensor_id, since, limit)).fetchall()
+    else:
+        rows = conn.execute("""
+            SELECT * FROM sensor_temperaturas
+            WHERE sensor_id = ? ORDER BY id DESC LIMIT ?
+        """, (sensor_id, limit)).fetchall()
     return list(reversed(rows))
