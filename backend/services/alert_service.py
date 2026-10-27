@@ -1,8 +1,8 @@
 """Dominio: reglas de negocio de HU-01 (RF01).
 
-AquÃ­ viven las reglas: solo hay alerta si hay humo, la prioridad se calcula
-segÃºn el nivel de humo y una alerta no se despacha dos veces. No conoce HTTP:
-lanza excepciones propias y el router las traduce a cÃ³digos de estado.
+Aquí viven las reglas: solo hay alerta si hay humo, la prioridad se calcula
+según el nivel de humo y una alerta no se despacha dos veces. No conoce HTTP:
+lanza excepciones propias y el router las traduce a códigos de estado.
 """
 from __future__ import annotations
 
@@ -23,11 +23,11 @@ class AlertNotFoundError(Exception):
 
 
 class AlertAlreadyDispatchedError(Exception):
-    """La alerta ya tenÃ­a una unidad despachada (-> 409)."""
+    """La alerta ya tenía una unidad despachada (-> 409)."""
 
 
 class AlertPersistenceError(Exception):
-    """FallÃ³ el guardado en la base de datos (-> 500)."""
+    """Falló el guardado en la base de datos (-> 500)."""
 
 
 
@@ -53,7 +53,7 @@ def process_detection(detection: SensorDetection) -> Alert | None:
 
     priority = priority_for(detection.smoke_level)
     detected_at = datetime.now(timezone.utc).isoformat()
-    message = f"Sensor {detection.sensor_id} detectÃ³ humo en {detection.sector}."
+    message = f"Sensor {detection.sensor_id} detectó humo en {detection.sector}."
 
     try:
         with _open_db_connection() as conn:

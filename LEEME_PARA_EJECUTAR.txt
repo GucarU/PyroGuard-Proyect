@@ -1,0 +1,41 @@
+PYROGUARD - INICIAR EN WINDOWS
+============================
+
+1. Descomprime el ZIP en una carpeta NUEVA (no mezcles con un clon antiguo).
+2. Abre la carpeta PyroGuard-Proyect-main.
+3. Haz doble clic en INICIAR_PYROGUARD.bat.
+4. Se abriran dos ventanas: backend Python y frontend React.
+5. La primera vez puede tardar porque se instalan dependencias; necesitas Internet.
+6. Cuando React muestre una URL local, abre http://localhost:5173
+   (puede variar si el puerto 5173 ya esta ocupado; usa la direccion exacta mostrada por Vite).
+7. Si ves una version antigua, recarga el navegador con Ctrl + Shift + R.
+
+DEBES MANTENER AMBAS VENTANAS ABIERTAS.
+
+Si prefieres la terminal de VS Code, abre DOS terminales diferentes:
+TERMINAL 1 (carpeta principal):
+  python -m pip install -r requirements.txt
+  python -m uvicorn backend.main:app --reload
+
+TERMINAL 2 (carpeta principal):
+  cd frontend
+  npm.cmd install
+  npm.cmd run dev
+
+PARA COMPROBAR PRUEBAS:
+  Doble clic en COMPROBAR_PYROGUARD.bat
+
+COMPROBACIONES VISUALES:
+- Central y mapa: boton "Generar alerta aleatoria" y boton "Ver mapa".
+- Dos alertas seguidas no repiten sensor.
+- Logistica: mapa de grifos de practica.
+- Sensores: porcentaje + bateria grafica.
+- Solicitudes: mapa secundario clicable.
+
+NOTAS:
+- Los datos de grifos y sensores son SOLO de practica.
+- Los mapas usan mosaicos de OpenStreetMap, que requieren Internet.
+- Un bloqueo de firewall o navegador puede dejar el mapa sin calles.
+- El backend corre en puerto 8000 por defecto.
+- Si ya tienes otro PyroGuard abierto, cierra sus terminales antes de iniciar esta copia.
+- npm.cmd evita la restriccion de scripts de PowerShell de Windows.
