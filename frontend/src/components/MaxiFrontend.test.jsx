@@ -5,6 +5,8 @@ import MaxiIncidentActions from './MaxiIncidentActions'
 import MaxiSafeCheckin from './MaxiSafeCheckin'
 import MaxiHydrants from './MaxiHydrants'
 
+vi.mock('./HydrantMap', () => ({ default: () => <div data-testid="hydrant-map" /> }))
+
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 describe('Hito 2 — pruebas React HU de Maximiliano', () => {

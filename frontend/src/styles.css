@@ -153,3 +153,67 @@ button:disabled { cursor:not-allowed; }
 @media (max-width: 580px) { .summary-grid {grid-template-columns:repeat(2,1fr)} .app-nav {display:grid;grid-template-columns:1fr 1fr;} .nav-tab {min-width:0;} .control-strip label { flex:1 1 100%; } .hero-modern button {width:100%;} .alerts-section {padding:18px;} .alert-data {grid-template-columns:1fr 1fr;} }
 
 .map-legend { color:#b3cbd4; margin-top:0; line-height:1.55; font-size:.88rem; }
+
+/* Mejoras visuales pedidas por el usuario */
+.sensor-card-modern { display:grid; gap:16px; }
+.sensor-topline { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+.sensor-caption { margin:0 0 6px; color:#8eabb5; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; }
+.sensor-chip { display:inline-flex; align-items:center; border-radius:999px; padding:6px 10px; font-weight:800; font-size:.75rem; }
+.sensor-chip.ok { background:#17352d; color:#7ce1b7; }
+.sensor-chip.warning { background:#3d2618; color:#ffbd73; }
+.battery-widget { border:1px solid #31474f; border-radius:16px; padding:14px; background:#101d22; display:grid; gap:10px; }
+.battery-header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.battery-title { display:block; color:#8eabb5; font-size:.78rem; margin-bottom:4px; }
+.battery-state { border-radius:999px; padding:5px 10px; font-size:.75rem; font-weight:800; }
+.battery-widget.ok .battery-state { background:#17352d; color:#7ce1b7; }
+.battery-widget.warning .battery-state { background:#4b3c18; color:#ffd36a; }
+.battery-widget.danger .battery-state { background:#50231f; color:#ff9c85; }
+.battery-shell { display:flex; align-items:center; gap:6px; }
+.battery-body { flex:1; min-height:30px; border:2px solid #5a737c; border-radius:10px; padding:4px; display:grid; grid-template-columns:repeat(4,1fr); gap:4px; background:#081216; }
+.battery-tip { width:8px; height:18px; border-radius:0 4px 4px 0; background:#5a737c; }
+.battery-bar { border-radius:5px; background:#183039; opacity:.3; }
+.battery-bar.active { opacity:1; }
+.battery-widget.ok .battery-bar.active { background:#42d392; }
+.battery-widget.warning .battery-bar.active { background:#ffd36a; }
+.battery-widget.danger .battery-bar.active { background:#ff5a5f; }
+.sensor-summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.sensor-summary-item { background:#111f24; border-radius:12px; padding:12px; display:grid; gap:4px; }
+.sensor-summary-item span { color:#8ea3ab; font-size:.8rem; }
+.sensor-summary-item strong { font-size:1rem; }
+.sensor-summary-item small { color:#a7bac2; line-height:1.45; }
+
+.request-panel-grid { display:grid; grid-template-columns:1.05fr .95fr; gap:16px; align-items:start; }
+.request-form-card, .request-map-card { background:#101d22; border:1px solid #2b4149; border-radius:16px; padding:16px; }
+.request-map-icon, .request-history-map-icon { display:grid !important; place-items:center; border-radius:50%; box-shadow:0 4px 16px rgba(0,0,0,.45); }
+.request-map-icon { border:2px solid #ffd36a; background:#48380f; font-size:20px; }
+.request-history-map-icon { border:2px solid #84c7fc; background:#173a50; font-size:18px; }
+
+@media (max-width: 900px) {
+  .request-panel-grid, .sensor-summary-grid { grid-template-columns:1fr; }
+}
+
+/* Mejoras de mapa y simulación - octubre 2026 */
+.latest-alert-banner {display:flex; gap:14px; align-items:center; flex-wrap:wrap; background:#16342e; border:1px solid #2c806f; border-radius:14px; padding:14px 18px; color:#dcfff2}
+.latest-alert-banner span {flex:1; min-width:180px; color:#b5ead5}
+.hydrant-map-wrap {margin:18px 0; border:1px solid #334b52; border-radius:18px; padding:16px; background:#0b181e;}
+.hydrant-map-heading {display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px}
+.hydrant-map-heading span {font-size:.85rem; color:#a2c7d5}
+.hydrant-map-footer {margin-bottom:0; font-size:.8rem}
+.hydrant-pin {display:grid; place-items:center; height:38px; width:38px; border:2px solid var(--hydrant-color); border-radius:50%; background:#12313c; box-shadow:0 4px 15px #0006; font-size:22px}
+.role-help-panel {background:#243018; border:1px solid #657947; padding:16px; border-radius:14px; margin:15px 0;}
+.role-help-panel p {color:#cfe6b6; line-height:1.5; margin:8px 0 12px}
+.role-help-panel strong {color:#ebffd6}
+.hydrant-map-wrap .leaflet-container, .map-section .leaflet-container {z-index:0; background:#15323c}
+.hero-actions {display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#mapa-central {scroll-margin-top:14px}
+@media (max-width:600px){.hero-actions {width:100%;display:grid;grid-template-columns:1fr;}}
+
+/* HU-16: solicitudes recibidas visibles en mapa central */
+.squad-request-map-icon { display: grid !important; place-items: center; width: 42px; height: 42px; border: 3px solid #fbd68b; background: #5b3916; border-radius: 50%; font-size: 22px; box-shadow: 0 4px 18px rgba(0,0,0,.45); }
+.squad-request-list { display: grid; gap: 10px; }
+.squad-request-card { background: #111f24; border: 1px solid #31474f; padding: 13px 16px; border-radius: 13px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.squad-request-card strong { display: block; }
+.squad-request-card p { margin: 6px 0; color: #b5c6ce; }
+.squad-request-card small { color: #fbd68b; }
+.request-success-actions { border: 1px solid #42a17c; background: #112c23; display: flex; justify-content: space-between; gap: 12px; align-items: center; border-radius: 13px; padding: 12px 16px; margin: 14px 0; }
+@media (max-width: 760px) { .request-success-actions, .squad-request-card { flex-direction: column; align-items: stretch; } }

@@ -1,6 +1,8 @@
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { useEffect, useRef } from 'react'
 import { activeMapAlerts, isValidPoint, markerColor } from '../lib/maxi'
+import { mapWaterRequests, waterRequestStatus } from '../lib/waterRequests'
+import { resolveMapFocus } from '../lib/mapFocus'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -18,6 +20,13 @@ const shelterIcon = L.divIcon({
   iconAnchor: [19, 19],
 })
 
+const squadRequestIcon = L.divIcon({
+  className: 'squad-request-map-icon',
+  html: '<span>🚒</span>',
+  iconSize: [42, 42],
+  iconAnchor: [21, 21],
+})
+
 const hydrantIcon = L.divIcon({
   className: 'hydrant-map-icon',
   html: '<span>💧</span>',
@@ -25,40 +34,75 @@ const hydrantIcon = L.divIcon({
   iconAnchor: [19, 19],
 })
 
-function FocusSector({ sector, alerts, sensors }) {
-  const map = useMap()
-  const lastSector = useRef(null)
+function WaterRequestMarker({ request, focused, focusVersion }) {
+  const markerRef = useRef(null)
   useEffect(() => {
-    if (!sector) { lastSector.current = null; return }
-    if (lastSector.current === sector) return
-    const reference = [...alerts, ...sensors].find(isValidPoint)
-    if (reference) { map.flyTo([Number(reference.latitude), Number(reference.longitude)], 13, { duration: 0.7 }); lastSector.current = sector }
-  }, [sector, alerts, sensors, map])
+    if (focused) markerRef.current?.openPopup()
+    else markerRef.current?.closePopup()
+  }, [focused, focusVersion])
+  return (
+    <Marker ref={markerRef} position={[Number(request.latitude), Number(request.longitude)]} icon={squadRequestIcon}>
+      <Popup>
+        <strong>🚒 Solicitud de apoyo #{request.id}</strong><br />
+        Solicitante: {request.requester}<br />
+        Estado: {waterRequestStatus(request.status)}<br />
+        Detalle: {request.description || 'Reabastecimiento o apoyo en terreno'}<br />
+        Ubicación: {Number(request.latitude).toFixed(5)}, {Number(request.longitude).toFixed(5)}<br />
+        <small>Solicitud registrada · No implica despacho real de cuadrilla.</small>
+      </Popup>
+    </Marker>
+  )
+}
+
+function FocusSector({ sector, alerts, sensors, focusAlertId, waterRequests, focusedWaterRequestId, focusedWaterRequestVersion }) {
+  const map = useMap()
+  const lastFocus = useRef(null)
+  useEffect(() => {
+    // React-Leaflet puede medirse antes de recibir sus dimensiones definitivas.
+    const timer = setTimeout(() => map.invalidateSize(), 100)
+    return () => clearTimeout(timer)
+  }, [map])
+  useEffect(() => {
+    const key = `${sector || 'todo'}:${focusAlertId ?? 'ninguno'}:${focusedWaterRequestId ?? 'ninguna'}:${focusedWaterRequestVersion}`
+    if (key === lastFocus.current) return
+    const target = resolveMapFocus({
+      sector, alerts, sensors, focusAlertId, waterRequests, focusedWaterRequestId,
+    })
+    if (target) {
+      map.flyTo(target.point, target.zoom, { duration: 0.65 })
+      lastFocus.current = key
+    } else if (!sector && focusedWaterRequestId == null && focusAlertId == null) {
+      // Quitar el filtro no implica navegar a una solicitud anterior.
+      lastFocus.current = key
+    }
+  }, [sector, focusAlertId, focusedWaterRequestId, focusedWaterRequestVersion, waterRequests, alerts, sensors, map])
   return null
 }
 
-export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], selectedSector = '', hydrants = [], showHydrants = false }) {
+export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], selectedSector = '', focusAlertId = null, hydrants = [], showHydrants = false, waterRequests = [], focusedWaterRequestId = null, focusedWaterRequestVersion = 0 }) {
   const validAlerts = activeMapAlerts(alerts)
+  const validWaterRequests = mapWaterRequests(waterRequests)
   const windSensors = sensorStatuses.filter(
     (sensor) => sensor.wind_alert && sensor.latitude != null && sensor.longitude != null,
   )
 
   return (
-    <section className="map-section alerts-section">
+    <section id="mapa-central" className="map-section alerts-section">
       <div className="section-heading">
         <div>
           <p className="section-label">Mapa operacional</p>
-          <h2>Focos, viento y albergues · grifos de práctica</h2>
+          <h2>Mapa de alertas y recursos</h2>
+          <p className="muted-text">{validWaterRequests.length} solicitudes de apoyo marcadas en la central</p>
         </div>
       </div>
 
-      <p className="map-legend">🟠 Pendiente · 🔴 Validado · 🏠 Albergue · 💧 Grifo de práctica · Las falsas alarmas se ocultan del mapa, pero siguen en el historial.</p>
+      <p className="map-legend">🟠 Alerta pendiente · 🔴 Incendio validado · 🏠 Albergue · 💧 Grifo de práctica · 🚒 Solicitud de apoyo recibida. Los marcadores de solicitud son independientes del filtro por cerro.</p>
       <MapContainer
         center={[-33.0472, -71.6127]}
         zoom={11}
-        style={{ height: '380px', width: '100%', borderRadius: '16px' }}
+        style={{ height: '420px', width: '100%', borderRadius: '16px' }}
       >
-        <FocusSector sector={selectedSector} alerts={alerts} sensors={sensorStatuses} />
+        <FocusSector sector={selectedSector} focusAlertId={focusAlertId} alerts={validAlerts} sensors={sensorStatuses} waterRequests={validWaterRequests} focusedWaterRequestId={focusedWaterRequestId} focusedWaterRequestVersion={focusedWaterRequestVersion} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
@@ -91,6 +135,10 @@ export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], s
           </Marker>
         ))}
 
+        {validWaterRequests.map((request) => (
+          <WaterRequestMarker key={`request-${request.id}`} request={request} focused={request.id === focusedWaterRequestId} focusVersion={focusedWaterRequestVersion} />
+        ))}
+
         {showHydrants && hydrants.filter(isValidPoint).map((hydrant) => (
           <Marker key={`hydrant-${hydrant.id}`} position={[Number(hydrant.latitude), Number(hydrant.longitude)]} icon={hydrantIcon}>
             <Popup><strong>{hydrant.name}</strong><br />Estado de práctica: {hydrant.status}<br /><strong>REGISTRO FICTICIO · NO OPERACIONAL</strong></Popup>
@@ -112,6 +160,7 @@ export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], s
           </Marker>
         ))}
       </MapContainer>
+      <p className="muted-text" style={{marginBottom:0, fontSize:'.83rem'}}>Si el mapa no muestra calles, comprueba Internet: las imágenes cartográficas se cargan desde OpenStreetMap. Puedes ampliar o arrastrar el mapa.</p>
     </section>
   )
 }
