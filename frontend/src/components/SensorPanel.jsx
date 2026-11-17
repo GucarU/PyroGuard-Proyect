@@ -69,7 +69,6 @@ export default function SensorPanel({ onStatusesChange }) {
       <section className="alerts-section jose-section">
         <div className="section-heading">
           <div>
-            <p className="section-label">JOSÉ · HU-02 / HU-03 / HU-04</p>
             <h2>Monitoreo amigable de sensores</h2>
             <p className="muted-text">Vista pensada para leer el estado rápidamente: batería, viento y salud general del sensor.</p>
           </div>

@@ -24,23 +24,22 @@ export default function MaxiSafeCheckin({ role }) {
       setRecords(list); setViewing(true); setError('')
     } catch (e) { setError(e.message) }
   }
-  return <section className="alerts-section" aria-label="HU-10 estoy a salvo">
-    <p className="section-label">HU-10 · Registro ciudadano de prueba</p>
+  return <section className="alerts-section" aria-label="Confirmar que estoy a salvo">
     <h2>Confirmar que estoy a salvo</h2>
-    <p className="muted-text">Este es un prototipo académico, no un canal oficial de evacuación. Usa un alias de prueba, nunca datos personales reales.</p>
+    <p className="muted-text">Registro de seguridad local.</p>
     <div className="form-grid">
-      <label>Alias de prueba<input value={alias} maxLength="80" onChange={e => setAlias(e.target.value)} placeholder="Ej. Vecino Demo 1" /></label>
+      <label>Alias<input value={alias} maxLength="80" onChange={e => setAlias(e.target.value)} placeholder="Ej. Vecino 1" /></label>
       <label>Cerro o sector<input value={sector} maxLength="120" onChange={e => setSector(e.target.value)} placeholder="Ej. Cerro Alegre" /></label>
     </div>
     <div className="button-row space-top">
       <button type="button" disabled={alias.trim().length < 2 || sector.trim().length < 2 || busy} onClick={() => setConfirming(true)}>Estoy a salvo</button>
       {authorized && <button type="button" className="secondary" onClick={view}>Ver registros municipales</button>}
     </div>
-    {confirming && <div className="maxi-confirm space-top"><strong>¿Guardar este reporte de prueba?</strong><p>Se registrará en el servidor de PyroGuard, no en servicios de emergencia.</p>
+    {confirming && <div className="maxi-confirm space-top"><strong>¿Guardar este registro?</strong><p>Se registrará en el servidor de PyroGuard.</p>
       <div className="button-row"><button type="button" disabled={busy} onClick={submit}>{busy ? 'Guardando…' : 'Confirmar registro'}</button><button type="button" className="secondary" onClick={() => setConfirming(false)}>Cancelar</button></div>
     </div>}
     {saved && <p className="mini-notice" role="status">Registro #{saved.id} guardado: A SALVO ({saved.alias}) · {new Date(saved.reported_at).toLocaleString('es-CL')}</p>}
     {error && <p className="notice error" role="alert">{error}</p>}
-    {viewing && authorized && <div className="compact-list"><h3>Registros de prueba ({records.length})</h3>{records.length ? records.map(r => <p key={r.id}>#{r.id} · {r.alias} · {r.sector} · {new Date(r.reported_at).toLocaleString('es-CL')}</p>) : <p>Sin registros todavía.</p>}</div>}
+    {viewing && authorized && <div className="compact-list"><h3>Registros ({records.length})</h3>{records.length ? records.map(r => <p key={r.id}>#{r.id} · {r.alias} · {r.sector} · {new Date(r.reported_at).toLocaleString('es-CL')}</p>) : <p>Sin registros todavía.</p>}</div>}
   </section>
 }

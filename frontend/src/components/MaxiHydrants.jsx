@@ -73,9 +73,9 @@ export default function MaxiHydrants({ role, onHydrantsChange, onChangeRole }) {
     } catch (e) { setError(e.message) } finally { setBusy(false) }
   }
 
-  return <section className="alerts-section" aria-label="HU-14 mapa de grifos">
+  return <section className="alerts-section" aria-label="Mapa de grifos">
     <div className="section-heading">
-      <div><p className="section-label">HU-14 · Recursos georreferenciados · Solo demo</p><h2>Grifos en el mapa</h2></div>
+      <div><h2>Grifos en el mapa</h2></div>
       {allowed && <button type="button" className="secondary" onClick={toggle}>{visible ? 'Ocultar en central' : 'Mostrar en central'}</button>}
     </div>
     <p className="muted-text">Grifos de práctica sobre OpenStreetMap. No se está usando un catastro oficial ni un inicio de sesión real.</p>

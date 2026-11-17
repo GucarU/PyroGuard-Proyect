@@ -6,11 +6,27 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(circle at top right, #17313a 0, #0a1115 42%); }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+body.dark-theme { background: radial-gradient(circle at top right, #17313a 0, #0a1115 42%); }
+body.light-theme { background: linear-gradient(180deg, #eaf1f4 0%, #dfeaf0 100%); }
 button { font: inherit; }
 
 .app-shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding-bottom: 64px; }
+.app-shell.dark-theme { color-scheme: dark; }
+.app-shell.light-theme { color-scheme: light; background: #edf2f5; border-radius: 0 0 18px 18px; }
 .topbar { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding: 42px 0 28px; }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.theme-toggle { min-width: 120px; padding: 10px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; font-size: .85rem; font-weight: 700; }
+.logout-button { min-width: 110px; }
+.auth-shell { display: grid; place-items: center; min-height: 100vh; }
+.login-card { width: min(430px, calc(100vw - 28px)); background: rgba(15, 27, 32, .96); border: 1px solid #2b4149; border-radius: 22px; padding: 28px; box-shadow: 0 24px 70px rgba(0,0,0,.25); }
+.login-card h1 { margin: 0 0 18px; font-size: clamp(2rem, 4vw, 2.7rem); }
+.login-form { display: grid; gap: 16px; }
+.login-form label { display: grid; gap: 8px; color: #dfe9ed; font-weight: 700; }
+.login-error { margin: 0; color: #ffb4b4; font-size: .9rem; }
+.app-shell.light-theme .login-card { background: rgba(255,255,255,.9); border-color: #d6e3e9; }
+.app-shell.light-theme .login-card h1,
+.app-shell.light-theme .login-form label { color: #1a2c35; }
 .eyebrow, .section-label { color: #ff7b54; font-weight: 800; letter-spacing: .12em; font-size: .75rem; margin: 0 0 8px; }
 h1 { font-size: clamp(2rem, 5vw, 3.7rem); line-height: 1; margin: 0; }
 .subtitle { color: #9fb2ba; margin: 10px 0 0; }
@@ -32,6 +48,16 @@ button.secondary { background: #1a2a30; color: #dfe9ed; box-shadow: none; border
 .summary-grid article { padding: 20px; background: #101c21; border: 1px solid #24363d; border-radius: 16px; }
 .summary-grid span { color: #8ca0a8; display: block; margin-bottom: 8px; }
 .summary-grid strong { font-size: 2rem; }
+
+.quick-dashboard { background: #101c21; border: 1px solid #2a3f47; border-radius: 18px; padding: 18px 20px; margin-bottom: 18px; }
+.quick-dashboard-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.quick-dashboard-header h3 { margin: 0; font-size: 1.08rem; }
+.quick-dashboard-header span { color: #9bb0b9; font-size: .8rem; }
+.quick-dashboard-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.quick-dashboard-grid article { background: #0d171b; border: 1px solid #2b4048; border-radius: 14px; padding: 16px; display: grid; gap: 6px; }
+.quick-dashboard-grid .quick-label { color: #8ea3aa; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+.quick-dashboard-grid strong { font-size: 1.8rem; line-height: 1; }
+.quick-dashboard-grid small { color: #b6cbd4; }
 
 .alerts-section { padding: 26px; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -125,6 +151,91 @@ textarea { min-height: 90px; resize: vertical; }
 
 /* Hito 2: navegación intuitiva y jerarquía visual */
 .topbar-modern { padding: 30px 0 20px; }
+.app-shell.light-theme .topbar-modern h1,
+.app-shell.light-theme .hero-card h2,
+.app-shell.light-theme .section-heading h2,
+.app-shell.light-theme .alert-card h3,
+.app-shell.light-theme .sensor-card strong,
+.app-shell.light-theme .shelter-card strong,
+.app-shell.light-theme .water-request-card strong,
+.app-shell.light-theme .compact-list h3,
+.app-shell.light-theme .role-help-panel strong,
+.app-shell.light-theme .maxi-confirm strong,
+.app-shell.light-theme .hydrat-map-heading strong { color: #14252d; }
+.app-shell.light-theme .topbar-modern,
+.app-shell.light-theme .app-nav,
+.app-shell.light-theme .control-strip,
+.app-shell.light-theme .summary-grid article,
+.app-shell.light-theme .quick-dashboard,
+.app-shell.light-theme .quick-dashboard-grid article,
+.app-shell.light-theme .hero-card,
+.app-shell.light-theme .alerts-section,
+.app-shell.light-theme .alert-card,
+.app-shell.light-theme .sensor-card,
+.app-shell.light-theme .shelter-card,
+.app-shell.light-theme .request-form-card,
+.app-shell.light-theme .request-map-card,
+.app-shell.light-theme .modal-card,
+.app-shell.light-theme .compact-list,
+.app-shell.light-theme .compact-form,
+.app-shell.light-theme .water-request-card,
+.app-shell.light-theme .hydrant-map-wrap,
+.app-shell.light-theme .role-help-panel,
+.app-shell.light-theme .maxi-confirm,
+.app-shell.light-theme .mini-notice,
+.app-shell.light-theme .notice,
+.app-shell.light-theme .battery-widget,
+.app-shell.light-theme .sensor-summary-item { background: #f8fbfc; border-color: #d5e0e5; color: #15313d; }
+.app-shell.light-theme .muted-text,
+.app-shell.light-theme .alert-card > p,
+.app-shell.light-theme .sensor-card span,
+.app-shell.light-theme .shelter-card span,
+.app-shell.light-theme .water-request-card p,
+.app-shell.light-theme .water-request-card span,
+.app-shell.light-theme .summary-grid span,
+.app-shell.light-theme .quick-dashboard-header span,
+.app-shell.light-theme .quick-dashboard-grid .quick-label,
+.app-shell.light-theme .quick-dashboard-grid small,
+.app-shell.light-theme .alert-footer small,
+.app-shell.light-theme .map-legend,
+.app-shell.light-theme .maxi-helper,
+.app-shell.light-theme .maxi-panel,
+.app-shell.light-theme .compact-list p,
+.app-shell.light-theme .prototype-strip,
+.app-shell.light-theme .role-help-panel p,
+.app-shell.light-theme .control-strip .muted-text,
+.app-shell.light-theme .sensor-caption,
+.app-shell.light-theme .sensor-summary-item span,
+.app-shell.light-theme .battery-title,
+.app-shell.light-theme .maxi-banner p,
+.app-shell.light-theme .alert-data dt,
+.app-shell.light-theme .sensor-data dt,
+.app-shell.light-theme .footer-meta { color: #2d4650; }
+.app-shell.light-theme .quick-dashboard { background: #f8fbfc; border-color: #d5e0e5; color: #15313d; }
+.app-shell.light-theme .quick-dashboard-header h3,
+.app-shell.light-theme .quick-dashboard-grid strong,
+.app-shell.light-theme .quick-dashboard-grid article { color: #15313d; }
+.app-shell.light-theme .quick-dashboard-grid article { background: #ffffff; border-color: #d9e5ea; }
+.app-shell.light-theme .api-status { background: #ebf2f5; border-color: #cbdfe5; color: #17303d; }
+.app-shell.light-theme .maxi-panel { background: #f8fbfc; border-color: #d5e0e5; color: #15313d; }
+.app-shell.light-theme .notice.success { background: #e5f9f0; }
+.app-shell.light-theme .notice.error { background: #fdeaea; }
+.app-shell.light-theme input,
+.app-shell.light-theme textarea,
+.app-shell.light-theme select,
+.app-shell.light-theme .control-strip select,
+.app-shell.light-theme .maxi-control-label select { background: #ffffff; border-color: #cfe0e6; color: #1a2c35; }
+.app-shell.light-theme .theme-toggle { background: #e8eef2; color: #15313d; border: 1px solid #ccdfe6; box-shadow: none; }
+.app-shell.light-theme .nav-tab { color: #2d4753; }
+.app-shell.light-theme .nav-tab.active { color: #ffffff; }
+.app-shell.light-theme .control-strip label,
+.app-shell.light-theme .maxi-control-label,
+.app-shell.light-theme .login-form label,
+.app-shell.light-theme .form-grid label,
+.app-shell.light-theme .report-form label,
+.app-shell.light-theme .inline-form label,
+.app-shell.light-theme .request-form-card label,
+.app-shell.light-theme .shelter-card label { color: #1f3641; }
 .prototype-strip { margin-bottom: 18px; padding: 12px 16px; border-radius: 12px; background: #32291a; border: 1px solid #685338; color: #f5dab1; line-height: 1.5; }
 .app-nav { display:flex; gap: 8px; padding: 8px; background: #101d22; border: 1px solid #30424a; border-radius: 16px; margin-bottom: 14px; flex-wrap:wrap; }
 .nav-tab { flex:1; min-width: 135px; padding: 12px 15px; box-shadow:none; color:#bed0d6; background:transparent; border:1px solid transparent; }

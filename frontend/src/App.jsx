@@ -32,6 +32,14 @@ export default function App() {
   const [focusedWaterRequestVersion, setFocusedWaterRequestVersion] = useState(0)
   const [showHydrants, setShowHydrants] = useState(true)
   const [backendOk, setBackendOk] = useState(false)
+  const [theme, setTheme] = useState('dark')
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('pyroguard-auth') === 'admin'
+  })
+  const [loginUser, setLoginUser] = useState('admin')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const [busy, setBusy] = useState(false)
   const [selectedSector, setSelectedSector] = useState('')
   const [notice, setNotice] = useState(null)
@@ -117,6 +125,19 @@ export default function App() {
   }, [role])
 
   useEffect(() => {
+    document.body.classList.remove('dark-theme', 'light-theme')
+    document.body.classList.add(theme === 'dark' ? 'dark-theme' : 'light-theme')
+  }, [theme])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      localStorage.setItem('pyroguard-auth', 'admin')
+    } else {
+      localStorage.removeItem('pyroguard-auth')
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
     loadAlerts()
     loadShelters()
     loadSensors()
@@ -187,17 +208,54 @@ export default function App() {
     }
   }
 
-  return <div className="app-shell">
+  function handleLogin(event) {
+    event.preventDefault()
+    if (loginUser.trim().toLowerCase() === 'admin' && loginPassword.trim().length >= 1) {
+      setIsAuthenticated(true)
+      setLoginError('')
+      return
+    }
+    setLoginError('Usuario o contraseña incorrectos. Usa admin con cualquier clave.')
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className={`app-shell auth-shell ${theme === 'dark' ? 'dark-theme' : 'light-theme'}`}>
+        <div className="login-card">
+          <p className="eyebrow">PYROGUARD · PROTOTIPO ACADÉMICO</p>
+          <h1>Acceso al panel</h1>
+          <form className="login-form" onSubmit={handleLogin}>
+            <label>
+              Usuario
+              <input value={loginUser} onChange={(event) => setLoginUser(event.target.value)} autoComplete="username" />
+            </label>
+            <label>
+              Contraseña
+              <input type="password" value={loginPassword} onChange={(event) => setLoginPassword(event.target.value)} autoComplete="current-password" />
+            </label>
+            {loginError && <p className="login-error">{loginError}</p>}
+            <button type="submit">Entrar</button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  return <div className={`app-shell ${theme === 'dark' ? 'dark-theme' : 'light-theme'}`}>
     <header className="topbar topbar-modern">
       <div>
         <p className="eyebrow">PYROGUARD · PROTOTIPO ACADÉMICO</p>
         <h1>Centro de coordinación</h1>
-        <p className="subtitle">Detección temprana, validación y coordinación de recursos · Hito 2</p>
       </div>
-      <span className={`api-status ${backendOk ? 'online' : 'offline'}`} role="status"><span className="dot" />{backendOk ? 'API conectada' : 'API sin conexión'}</span>
+      <div className="topbar-actions">
+        <button type="button" className="secondary theme-toggle" aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'} onClick={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}>
+          <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+          <span>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
+        </button>
+        <button type="button" className="secondary logout-button" onClick={() => setIsAuthenticated(false)}>Cerrar sesión</button>
+        <span className={`api-status ${backendOk ? 'online' : 'offline'}`} role="status"><span className="dot" />{backendOk ? 'API conectada' : 'API sin conexión'}</span>
+      </div>
     </header>
-
-    <div className="prototype-strip">Entorno de enseñanza y pruebas: <strong>no se conecta con Bomberos, municipalidades ni sistemas reales de emergencia.</strong></div>
 
     <nav className="app-nav" aria-label="Secciones del sistema">
       {SECTIONS.map(([id, label]) => (
@@ -227,11 +285,8 @@ export default function App() {
       {section === 'central' && <>
         <section className="hero-card hero-modern">
           <div>
-            <p className="section-label">HU-01 · Inicio rápido</p>
-            <h2>Generar una alerta aleatoria</h2>
-            <p>Cada clic crea una detección simulada en una ubicación distinta de la anterior. El sistema centra el mapa en el nuevo foco y guarda la alerta.</p>
+            <div className="hero-actions"><button onClick={simulateSmoke} disabled={busy || !backendOk}>{busy ? 'Generando…' : 'Generar alerta aleatoria'}</button><button type="button" className="secondary" onClick={() => document.getElementById('mapa-central')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver mapa</button></div>
           </div>
-          <div className="hero-actions"><button onClick={simulateSmoke} disabled={busy || !backendOk}>{busy ? 'Generando…' : 'Generar alerta aleatoria'}</button><button type="button" className="secondary" onClick={() => document.getElementById('mapa-central')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver mapa</button></div>
         </section>
 
         {latestDetection && <div className="latest-alert-banner" role="status">
@@ -244,6 +299,35 @@ export default function App() {
           <article><span>Pendientes</span><strong>{alerts.filter(a => a.status === 'PENDIENTE').length}</strong></article>
           <article><span>Validadas</span><strong>{alerts.filter(a => a.status === 'VALIDADO').length}</strong></article>
           <article><span>Falsas alarmas</span><strong>{alerts.filter(a => a.status === 'FALSA_ALARMA').length}</strong></article>
+        </section>
+
+        <section className="quick-dashboard" aria-label="Dashboard rápido">
+          <div className="quick-dashboard-header">
+            <h3>Dashboard rápido</h3>
+            <span>{lastSync ? `Sincronizado ${lastSync.toLocaleTimeString('es-CL')}` : 'Sincronizando...'}</span>
+          </div>
+          <div className="quick-dashboard-grid">
+            <article>
+              <span className="quick-label">Cobertura</span>
+              <strong>{sensorStatuses.length || 0}</strong>
+              <small>sensores activos</small>
+            </article>
+            <article>
+              <span className="quick-label">Recursos</span>
+              <strong>{hydrants.length || 0}</strong>
+              <small>grifos visibles</small>
+            </article>
+            <article>
+              <span className="quick-label">Solicitudes</span>
+              <strong>{waterRequests.length || 0}</strong>
+              <small>en central</small>
+            </article>
+            <article>
+              <span className="quick-label">Servicio</span>
+              <strong>{backendOk ? 'OK' : 'OFF'}</strong>
+              <small>{backendOk ? 'API conectada' : 'sin conexión'}</small>
+            </article>
+          </div>
         </section>
 
         <MaxiSectorFilter alerts={alerts} sensors={sensorStatuses} sector={selectedSector} onChange={handleSectorChange} />
@@ -264,9 +348,7 @@ export default function App() {
         <section className="alerts-section" aria-label="Solicitudes de terreno recibidas">
           <div className="section-heading">
             <div>
-              <p className="section-label">HU-16 · Solicitudes recibidas del terreno</p>
-              <h2>Apoyo solicitado en el mapa</h2>
-              <p className="muted-text">Cada solicitud registrada se marca con 🚒 en el mapa central; las solicitudes son de práctica y no despachan cuadrillas reales.</p>
+              <p className="muted-text">Cada solicitud registrada se marca con 🚒 en el mapa central.</p>
             </div>
             <button type="button" className="secondary" onClick={loadWaterRequests}>Actualizar solicitudes</button>
           </div>
@@ -282,9 +364,7 @@ export default function App() {
         <section className="alerts-section">
           <div className="section-heading">
             <div>
-              <p className="section-label">HU-05 y HU-08 · Gestión real de registros de prueba</p>
-              <h2>Alertas recientes</h2>
-              <p className="muted-text">Las falsas alarmas se conservan en el historial, pero desaparecen del mapa activo.</p>
+              <p className="muted-text">Historial de alertas.</p>
             </div>
             <button type="button" className="secondary" onClick={loadAlerts}>Actualizar</button>
           </div>

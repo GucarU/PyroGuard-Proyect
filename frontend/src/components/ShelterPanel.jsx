@@ -56,7 +56,6 @@ export default function ShelterPanel() {
     <section className="alerts-section jose-section">
       <div className="section-heading">
         <div>
-          <p className="section-label">JOSÉ · HU-15</p>
           <h2>Cupos de albergues</h2>
         </div>
         <button className="secondary" onClick={loadShelters}>Actualizar</button>
