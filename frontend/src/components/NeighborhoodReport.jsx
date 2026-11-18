@@ -58,7 +58,6 @@ export default function NeighborhoodReport() {
     <section className="alerts-section jose-section">
       <div className="section-heading">
         <div>
-          <p className="section-label">JOSÉ · HU-12</p>
           <h2>Reporte vecinal rápido</h2>
         </div>
       </div>

@@ -36,21 +36,21 @@ export default function HydrantMap({ items = [], selected = null, onPick, enable
   const displayPoints = enabled ? items.filter(isValidPoint) : []
   return <div className="hydrant-map-wrap">
     <div className="hydrant-map-heading">
-      <strong>Mapa de grifos de práctica</strong>
-      <span>{enabled ? `${displayPoints.length} puntos visibles` : 'Vista restringida por rol de práctica'}</span>
+      <strong>Grifos</strong>
+      <span>{enabled ? `${displayPoints.length} puntos visibles` : 'Vista restringida por rol'}</span>
     </div>
-    <p className="map-legend">💧 Los puntos son ficticios, NO indican grifos operativos reales. Haz clic para elegir dónde añadir uno.</p>
+    <p className="map-legend">💧 Haz clic para elegir dónde añadir un punto.</p>
     <MapContainer center={center} zoom={12} className="hydrant-leaflet-map" style={{height: '350px', width: '100%', borderRadius: '14px'}}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
       <MapRefresh pointCount={displayPoints.length} />
       {enabled && onPick && <LocationClick onPick={onPick} />}
       {displayPoints.map(point => <Marker key={point.id} position={[Number(point.latitude), Number(point.longitude)]} icon={pointIcon(point.status)}>
-        <Popup><strong>{point.name}</strong><br />{statusLabel[point.status] || point.status}<br />Punto de demostración, no verificado.</Popup>
+        <Popup><strong>{point.name}</strong><br />{statusLabel[point.status] || point.status}</Popup>
       </Marker>)}
       {enabled && selected && <Marker position={[selected.lat, selected.lng]} icon={pointIcon('EN_REVISION')}>
-        <Popup>Punto seleccionado para nuevo grifo de prueba</Popup>
+        <Popup>Punto seleccionado</Popup>
       </Marker>}
     </MapContainer>
-    <p className="muted-text hydrant-map-footer">Si el mapa no carga los mosaicos, revisa la conexión a Internet; se utiliza OpenStreetMap. Los puntos se guardan solo en el entorno de prueba.</p>
+    <p className="muted-text hydrant-map-footer">Si el mapa no carga los mosaicos, revisa la conexión a Internet.</p>
   </div>
 }

@@ -90,13 +90,12 @@ export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], s
     <section id="mapa-central" className="map-section alerts-section">
       <div className="section-heading">
         <div>
-          <p className="section-label">Mapa operacional</p>
-          <h2>Mapa de alertas y recursos</h2>
+          <h2>Mapa</h2>
           <p className="muted-text">{validWaterRequests.length} solicitudes de apoyo marcadas en la central</p>
         </div>
       </div>
 
-      <p className="map-legend">🟠 Alerta pendiente · 🔴 Incendio validado · 🏠 Albergue · 💧 Grifo de práctica · 🚒 Solicitud de apoyo recibida. Los marcadores de solicitud son independientes del filtro por cerro.</p>
+      <p className="map-legend">🟠 Alerta pendiente · 🔴 Incendio validado · 🏠 Albergue · 💧 Grifo · 🚒 Solicitud de apoyo recibida.</p>
       <MapContainer
         center={[-33.0472, -71.6127]}
         zoom={11}

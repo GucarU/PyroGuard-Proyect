@@ -110,7 +110,6 @@ export default function WaterRequestPanel({ onRequestCreated, onShowInCentral })
     <section className="alerts-section jose-section">
       <div className="section-heading">
         <div>
-          <p className="section-label">IVÁN · HU-16</p>
           <h2>Solicitud de apoyo o cuadrilla en terreno</h2>
           <p className="muted-text">Marca la ubicación en este mapa secundario para pedir apoyo sin usar el mapa principal. El sistema guarda el punto y lo deja visible para la central.</p>
         </div>

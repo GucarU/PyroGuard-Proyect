@@ -4,11 +4,10 @@ export default function MaxiSectorFilter({ alerts = [], sensors = [], sector = '
   const sectors = getSectors(alerts, sensors)
   const matches = filterBySector(alerts, sector).length
   return (
-    <section className="alerts-section maxi-panel" aria-label="HU-06 filtro por sector">
+    <section className="alerts-section maxi-panel" aria-label="Filtro por sector">
       <div className="section-heading">
         <div>
-          <p className="section-label">MAXIMILIANO · HU-06</p>
-          <h2>Filtrar mapa por cerro o sector</h2>
+          <h2>Filtrar mapa por sector</h2>
         </div>
         <label className="maxi-control-label" htmlFor="sector-select">
           Sector

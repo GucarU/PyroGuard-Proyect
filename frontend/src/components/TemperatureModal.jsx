@@ -56,7 +56,6 @@ export default function TemperatureModal({ sensor, onClose }) {
       <section className="modal-card" onMouseDown={(event) => event.stopPropagation()}>
         <div className="section-heading">
           <div>
-            <p className="section-label">HU-03 · Últimos 60 minutos</p>
             <h2>{sensor.sensor_id} · {sensor.sector}</h2>
           </div>
           <button className="secondary" onClick={onClose}>Cerrar</button>
