@@ -32,3 +32,10 @@ test('una alerta reciente se centra normalmente si el usuario no pide una solici
   assert.equal(result.kind, 'alerta')
   assert.deepEqual(result.point, [-33.041, -71.628])
 })
+
+test('el mapa abre el punto del reporte aunque exista una alerta reciente', () => {
+  const focusedReport = { id: 1, latitude: -33.055, longitude: -71.62, status: 'PENDIENTE' }
+  const result = resolveMapFocus({ alerts, focusAlertId: 1, focusedReport })
+  assert.deepEqual(result, { point: [-33.055, -71.62], zoom: 15, kind: 'reporte' })
+  assert.equal(resolveMapFocus({ sector: 'Cerro Alegre', alerts, focusedReport }).kind, 'sector')
+})

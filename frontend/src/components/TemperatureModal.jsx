@@ -8,8 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-
-const API = '' // Proxy /api de Vite, también compatible con acceso por red local
+import { api, jsonOptions } from '../lib/api'
 
 export default function TemperatureModal({ sensor, onClose }) {
   const [history, setHistory] = useState([])
@@ -18,9 +17,7 @@ export default function TemperatureModal({ sensor, onClose }) {
 
   async function load() {
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString().replace('Z', '+00:00')
-    const response = await fetch(`${API}/api/sensors/${sensor.sensor_id}/temperature-history?limit=1000&since=${encodeURIComponent(since)}`)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.detail || 'No fue posible cargar el historial')
+    const data = await api(`/api/sensors/${sensor.sensor_id}/temperature-history?limit=1000&since=${encodeURIComponent(since)}`)
     setHistory(
       data.filter(item => Date.parse(item.recorded_at) >= Date.now() - 60 * 60 * 1000).map((item, index) => ({
         ...item,
@@ -39,12 +36,7 @@ export default function TemperatureModal({ sensor, onClose }) {
     setMessage('')
     try {
       const value = Number(temperature)
-      const response = await fetch(`${API}/api/sensors/${sensor.sensor_id}/temperature`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ temperature_c: value }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'No fue posible registrar la temperatura')
+      const data = await api(`/api/sensors/${sensor.sensor_id}/temperature`, jsonOptions('POST', { temperature_c: value }))
       setTemperature('')
       setMessage(`Lectura ${data.temperature_c} °C registrada.`)
       await load()

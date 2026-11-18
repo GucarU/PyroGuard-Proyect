@@ -1,9 +1,10 @@
 import argparse
-import json
+import os
 import random
 import time
-import urllib.error
-import urllib.request
+from getpass import getpass
+
+import httpx
 
 
 def build_detection(mode: str) -> dict:
@@ -20,21 +21,9 @@ def build_detection(mode: str) -> dict:
     return detection
 
 
-def send_detection(url: str, detection: dict) -> None:
-    endpoint = f"{url.rstrip('/')}/api/sensors/detections"
-    request = urllib.request.Request(
-        endpoint,
-        data=json.dumps(detection).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            print(f"HTTP {response.status}: {response.read().decode('utf-8')}")
-    except urllib.error.HTTPError as error:
-        print(f"HTTP {error.code}: {error.read().decode('utf-8')}")
-    except urllib.error.URLError as error:
-        print(f"No se pudo conectar con {endpoint}: {error.reason}")
+def send_detection(client: httpx.Client, detection: dict) -> None:
+    response = client.post("/api/sensors/detections", json=detection)
+    print(f"HTTP {response.status_code}: {response.text}")
 
 
 def main() -> None:
@@ -47,18 +36,25 @@ def main() -> None:
     parser.add_argument("--cantidad", type=int, default=5, help="Envíos en modo aleatorio")
     args = parser.parse_args()
 
-    if args.modo != "aleatorio":
-        send_detection(args.url, build_detection(args.modo))
-        return
-    if args.intervalo < 0 or args.cantidad < 1:
+    if args.modo == "aleatorio" and (args.intervalo < 0 or args.cantidad < 1):
         parser.error("--intervalo debe ser >= 0 y --cantidad debe ser >= 1")
-    for index in range(args.cantidad):
-        mode = random.choice(["humo", "sin-humo"])
-        print(f"Envío {index + 1}/{args.cantidad} ({mode})")
-        send_detection(args.url, build_detection(mode))
-        if index + 1 < args.cantidad:
-            time.sleep(args.intervalo)
+    email = os.environ.get("PYROGUARD_ADMIN_EMAIL") or input("Correo operativo: ")
+    password = os.environ.get("PYROGUARD_ADMIN_PASSWORD") or getpass("Contraseña operativa: ")
+    with httpx.Client(base_url=args.url, timeout=10) as client:
+        client.post("/api/auth/login", json={"email": email, "password": password}).raise_for_status()
+        if args.modo != "aleatorio":
+            send_detection(client, build_detection(args.modo))
+            return
+        for index in range(args.cantidad):
+            mode = random.choice(["humo", "sin-humo"])
+            print(f"Envío {index + 1}/{args.cantidad} ({mode})")
+            send_detection(client, build_detection(mode))
+            if index + 1 < args.cantidad:
+                time.sleep(args.intervalo)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except httpx.HTTPError as error:
+        raise SystemExit(f"No fue posible iniciar sesión o conectar con PyroGuard: {error}") from error

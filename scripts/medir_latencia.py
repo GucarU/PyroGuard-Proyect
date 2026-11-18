@@ -1,26 +1,16 @@
 import argparse
 import json
+import os
 import statistics
 import time
-import urllib.error
-import urllib.request
 from datetime import datetime, timezone
+from getpass import getpass
 from pathlib import Path
 
-
-def request_json(url: str, method: str = "GET", payload: dict | None = None):
-    data = json.dumps(payload).encode("utf-8") if payload is not None else None
-    request = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method=method,
-    )
-    with urllib.request.urlopen(request, timeout=10) as response:
-        return json.loads(response.read().decode("utf-8"))
+import httpx
 
 
-def run_measurements(base_url: str, count: int, timeout: float, interval: float):
+def run_measurements(client: httpx.Client, count: int, timeout: float, interval: float):
     samples = []
     for number in range(1, count + 1):
         sensor_id = f"PG-RNF01-{time.time_ns()}-{number}"
@@ -33,13 +23,13 @@ def run_measurements(base_url: str, count: int, timeout: float, interval: float)
             "longitude": -71.6136,
         }
         started = time.perf_counter()
-        created = request_json(f"{base_url}/api/sensors/detections", "POST", payload)
+        created = client.post("/api/sensors/detections", json=payload).raise_for_status().json()
         if created.get("alert_created") is not True:
             raise RuntimeError(f"El backend no confirmó la alerta de la medición {number}.")
 
         deadline = started + timeout
         while time.perf_counter() < deadline:
-            alerts = request_json(f"{base_url}/api/alerts")
+            alerts = client.get("/api/alerts").raise_for_status().json()
             if any(alert.get("sensor_id") == sensor_id for alert in alerts):
                 elapsed = time.perf_counter() - started
                 samples.append(elapsed)
@@ -64,7 +54,11 @@ def main() -> None:
         parser.error("cantidad y timeout deben ser positivos; intervalo debe ser >= 0")
 
     base_url = args.url.rstrip("/")
-    samples = run_measurements(base_url, args.cantidad, args.timeout, args.intervalo)
+    email = os.environ.get("PYROGUARD_ADMIN_EMAIL") or input("Correo operativo: ")
+    password = os.environ.get("PYROGUARD_ADMIN_PASSWORD") or getpass("Contraseña operativa: ")
+    with httpx.Client(base_url=base_url, timeout=10) as client:
+        client.post("/api/auth/login", json={"email": email, "password": password}).raise_for_status()
+        samples = run_measurements(client, args.cantidad, args.timeout, args.intervalo)
     average = statistics.mean(samples)
     maximum = max(samples)
     print(f"Promedio: {average:.3f} s | Máximo: {maximum:.3f} s")
@@ -86,5 +80,5 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as error:
+    except (httpx.HTTPError, TimeoutError, RuntimeError, json.JSONDecodeError) as error:
         raise SystemExit(f"Medición incompleta: {error}") from error

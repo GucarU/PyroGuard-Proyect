@@ -57,13 +57,19 @@ CREATE TABLE IF NOT EXISTS sensor_temperaturas (
 CREATE_REPORTES_VECINALES_TABLE = """
 CREATE TABLE IF NOT EXISTS reportes_vecinales (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    photo_path TEXT NOT NULL,
-    original_filename TEXT NOT NULL,
+    photo_path TEXT NOT NULL DEFAULT '',
+    original_filename TEXT NOT NULL DEFAULT '',
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'PENDIENTE',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    citizen_id INTEGER REFERENCES auth_users(id) ON DELETE SET NULL,
+    alert_id INTEGER REFERENCES alertas(id) ON DELETE SET NULL,
+    reviewed_by TEXT,
+    reviewed_at TEXT,
+    location_label TEXT NOT NULL DEFAULT '',
+    submission_id TEXT
 )
 """
 
@@ -114,7 +120,29 @@ CREATE TABLE IF NOT EXISTS grifos_demo (
 )
 """
 
+CREATE_USERS_TABLE = """
+CREATE TABLE IF NOT EXISTS auth_users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('ADMIN', 'CIUDADANO')),
+    profile TEXT,
+    CHECK((role = 'CIUDADANO' AND profile IS NULL) OR
+          (role = 'ADMIN' AND profile IS NOT NULL AND profile IN ('operador', 'bombero', 'municipal')))
+)
+"""
+
+CREATE_SESSIONS_TABLE = """
+CREATE TABLE IF NOT EXISTS auth_sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+)
+"""
+
 SCHEMA_STATEMENTS = (
+    CREATE_USERS_TABLE,
     CREATE_ALERTAS_TABLE,
     CREATE_SENSORES_ESTADO_TABLE,
     CREATE_TEMPERATURAS_TABLE,
@@ -123,7 +151,30 @@ SCHEMA_STATEMENTS = (
     CREATE_SOLICITUDES_AGUA_TABLE,
     CREATE_SAFE_CHECKINS_TABLE,
     CREATE_HYDRANTS_TABLE,
+    CREATE_SESSIONS_TABLE,
+    "CREATE INDEX IF NOT EXISTS auth_sessions_expiry ON auth_sessions(expires_at)",
 )
+
+LEGACY_COLUMNS = {
+    "alertas": dict.fromkeys(("validated_by", "validated_at", "discarded_by", "discarded_at"), "TEXT"),
+    "albergues": {"status": "TEXT NOT NULL DEFAULT 'ABIERTO'"},
+    "reportes_vecinales": {
+        "citizen_id": "INTEGER REFERENCES auth_users(id) ON DELETE SET NULL",
+        "alert_id": "INTEGER REFERENCES alertas(id) ON DELETE SET NULL",
+        "reviewed_by": "TEXT",
+        "reviewed_at": "TEXT",
+        "location_label": "TEXT NOT NULL DEFAULT ''",
+        "submission_id": "TEXT",
+    },
+}
+
+
+def _missing_legacy_columns(connection: sqlite3.Connection) -> Iterator[tuple[str, str, str]]:
+    for table, additions in LEGACY_COLUMNS.items():
+        existing = {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
+        for field, definition in additions.items():
+            if field not in existing:
+                yield table, field, definition
 
 
 def get_db_path() -> Path:
@@ -141,18 +192,17 @@ def get_connection() -> sqlite3.Connection:
         connection.execute("PRAGMA foreign_keys = ON")
         for statement in SCHEMA_STATEMENTS:
             connection.execute(statement)
-        # Migración compatible con bases SQLite existentes: nunca borra alertas.
-        alert_columns = {row["name"] for row in connection.execute("PRAGMA table_info(alertas)")}
-        for field in ("validated_by", "validated_at", "discarded_by", "discarded_at"):
-            if field not in alert_columns:
-                connection.execute(f"ALTER TABLE alertas ADD COLUMN {field} TEXT")
-        shelter_columns = {
-            row["name"] for row in connection.execute("PRAGMA table_info(albergues)")
-        }
-        if "status" not in shelter_columns:
-            connection.execute(
-                "ALTER TABLE albergues ADD COLUMN status TEXT NOT NULL DEFAULT 'ABIERTO'"
-            )
+        if next(_missing_legacy_columns(connection), None) is not None:
+            connection.execute("BEGIN IMMEDIATE")
+            for table, field, definition in _missing_legacy_columns(connection):
+                connection.execute(f"ALTER TABLE {table} ADD COLUMN {field} {definition}")
+            connection.commit()
+        connection.execute("CREATE INDEX IF NOT EXISTS reportes_vecinales_citizen ON reportes_vecinales(citizen_id, id)")
+        connection.execute("CREATE INDEX IF NOT EXISTS reportes_vecinales_alert ON reportes_vecinales(alert_id)")
+        connection.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS reportes_vecinales_submission "
+            "ON reportes_vecinales(citizen_id, submission_id) WHERE submission_id IS NOT NULL"
+        )
     except Exception:
         connection.close()
         raise

@@ -39,20 +39,20 @@ describe('Hito 2 — pruebas React HU de Maximiliano', () => {
   })
   it('HU-10 muestra el registro solo después de una respuesta exitosa de API', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 2, alias: 'Vecino prueba', sector: 'Cerro', status: 'A_SALVO', reported_at: '2026-10-25T22:00:00Z' }) }))
-    render(<MaxiSafeCheckin role="vecino" />)
-    fireEvent.change(screen.getByPlaceholderText('Ej. Vecino Demo 1'), { target: { value: 'Vecino prueba' } })
+    render(<MaxiSafeCheckin />)
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'Vecino prueba' } })
     fireEvent.change(screen.getByPlaceholderText('Ej. Cerro Alegre'), { target: { value: 'Cerro' } })
     fireEvent.click(screen.getByRole('button', { name: /^Estoy a salvo$/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar registro' }))
     expect(await screen.findByRole('status')).toHaveTextContent(/Registro #2 guardado/)
   })
-  it('HU-14 no muestra grifos para vecino y sí carga los del backend para bombero', async () => {
+  it('HU-14 solo muestra los grifos al personal con un perfil habilitado', async () => {
     const hydrants = [{ id: 1, name: 'Grifo DEMO', latitude: -33.04, longitude: -71.6, demo: true, status: 'EN_REVISION' }]
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => hydrants }))
     const onHydrantsChange = vi.fn()
-    const { rerender } = render(<MaxiHydrants role="vecino" onHydrantsChange={onHydrantsChange} />)
-    expect(screen.getByText(/Capa disponible para roles de bomberos/i)).toBeInTheDocument()
-    rerender(<MaxiHydrants role="bombero" onHydrantsChange={onHydrantsChange} />)
+    const { rerender } = render(<MaxiHydrants profile="operador" onHydrantsChange={onHydrantsChange} />)
+    expect(screen.getByText(/Capa disponible para los perfiles Bombero y Municipal/i)).toBeInTheDocument()
+    rerender(<MaxiHydrants profile="bombero" onHydrantsChange={onHydrantsChange} />)
     await waitFor(() => expect(onHydrantsChange).toHaveBeenCalledWith(hydrants, true))
   })
 })

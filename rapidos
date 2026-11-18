@@ -1,0 +1,122 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'COMPROBAR_PYROGUARD.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'GUIA_INICIO_HITO2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'INICIAR_BACKEND.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'INICIAR_FRONTEND.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'INICIAR_PYROGUARD.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'INSTRUCCIONES_HU01.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LEEME_MAXI_CORREGIDO.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LEEME_PARA_EJECUTAR.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LEER_CORRECCION_FILTRO_SECTOR.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LEER_CORRECCION_MAPAS_Y_ALERTAS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'LEER_SOLICITUDES_EN_MAPA_CENTRAL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/__init__.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/database.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/repositories/__init__.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/repositories/alert_repository.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/repositories/report_repository.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/repositories/sensor_repository.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/repositories/shelter_repository.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/repositories/water_repository.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/alerts.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/dev.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/operations.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/reports.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/sensors.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/shelters.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/system.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/routers/water.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/schemas.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/__init__.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/alert_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/alert_service.py.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/report_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/sensor_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/shelter_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/services/water_service.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'database/modelo_alerta.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'database/modelo_usuario.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/PARTE_JOSE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/hito2/FRONTEND_MAXI_CAMBIOS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/hito2/MAXI_FRONTEND_HITO2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/sprint1/rnf01.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/login.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/App.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/AlertMap.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/HydrantMap.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/MaxiFrontend.test.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/MaxiHydrants.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/MaxiIncidentActions.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/MaxiSafeCheckin.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/MaxiSectorFilter.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/NeighborhoodReport.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/SensorPanel.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/ShelterPanel.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/TemperatureModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/WaterRequestPanel.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/api.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/demoDetections.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/demoDetections.test.node.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/mapFocus.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/mapFocus.test.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/maxi.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/maxi.test.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/waterRequests.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/lib/waterRequests.test.node.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/main.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/setupTests.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/styles.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/vite.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/vitest.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/medir_latencia.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'simulador/sensor_simulador.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/conftest.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_demo_multiple_sensors.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_hito2_mx.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_hu01.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_hu16_central_map.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_jose_hu.py', LF will be replaced by CRLF the next time Git touches it
+ COMPROBAR_PYROGUARD.bat                        |   3 [32m+[m[31m-[m
+ GUIA_INICIO_HITO2.md                           |  17 [32m+[m[31m-[m
+ INICIAR_FRONTEND.bat                           |   3 [32m+[m[31m-[m
+ README.md                                      |  40 [32m++[m[31m-[m
+ backend/database.py                            |  80 [32m++++[m[31m-[m
+ backend/main.py                                |  70 [32m+++[m[31m-[m
+ backend/repositories/report_repository.py      |  42 [32m++[m[31m-[m
+ backend/requirements.txt                       |   3 [32m+[m
+ backend/routers/operations.py                  |  47 [32m++[m[31m-[m
+ backend/routers/reports.py                     |  83 [32m++++[m[31m-[m
+ backend/schemas.py                             |  66 [32m+++[m[31m-[m
+ backend/services/report_service.py             | 141 [32m++++++[m[31m--[m
+ frontend/package-lock.json                     |  16 [32m+[m
+ frontend/package.json                          |  13 [32m+[m[31m-[m
+ frontend/src/App.jsx                           | 452 [32m+++++[m[31m--------------------[m
+ frontend/src/components/AlertMap.jsx           |  44 [32m++[m[31m-[m
+ frontend/src/components/HydrantMap.jsx         |   8 [32m+[m[31m-[m
+ frontend/src/components/MaxiFrontend.test.jsx  |  12 [32m+[m[31m-[m
+ frontend/src/components/MaxiHydrants.jsx       |  27 [32m+[m[31m-[m
+ frontend/src/components/MaxiSafeCheckin.jsx    |  15 [32m+[m[31m-[m
+ frontend/src/components/NeighborhoodReport.jsx | 296 [32m++++++++++++[m[31m----[m
+ frontend/src/components/SensorPanel.jsx        |  15 [32m+[m[31m-[m
+ frontend/src/components/ShelterPanel.jsx       |  26 [32m+[m[31m-[m
+ frontend/src/components/TemperatureModal.jsx   |  14 [32m+[m[31m-[m
+ frontend/src/components/WaterRequestPanel.jsx  |  25 [32m+[m[31m-[m
+ frontend/src/lib/api.js                        |  17 [32m+[m[31m-[m
+ frontend/src/lib/mapFocus.js                   |   8 [32m+[m[31m-[m
+ frontend/src/lib/mapFocus.test.js              |   7 [32m+[m
+ frontend/src/styles.css                        |  46 [32m++[m[31m-[m
+ frontend/vite.config.js                        |  13 [32m+[m[31m-[m
+ frontend/vitest.config.js                      |   1 [32m+[m
+ scripts/medir_latencia.py                      |  30 [32m+[m[31m-[m
+ simulador/sensor_simulador.py                  |  54 [32m++[m[31m-[m
+ tests/conftest.py                              |  61 [32m+++[m[31m-[m
+ tests/test_hito2_mx.py                         |  38 [32m+[m[31m--[m
+ tests/test_jose_hu.py                          |  13 [32m+[m[31m-[m
+ 36 files changed, 1086 insertions(+), 760 deletions(-)

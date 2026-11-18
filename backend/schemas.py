@@ -1,9 +1,36 @@
 """Modelos Pydantic: contratos de entrada y salida de la API."""
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, StringConstraints, field_validator
+
+
+OperationalProfile = Literal["operador", "bombero", "municipal"]
+
+
+class LoginCredentials(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: EmailStr
+    password: SecretStr = Field(min_length=1, max_length=128)
+
+
+class CitizenRegistration(LoginCredentials):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=80)]
+    password: SecretStr = Field(min_length=12, max_length=128)
+
+
+class AdminRegistration(CitizenRegistration):
+    profile: OperationalProfile
+
+
+class AuthUser(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    role: Literal["ADMIN", "CIUDADANO"]
+    profile: OperationalProfile | None
 
 
 # HU-01
@@ -75,15 +102,41 @@ class TemperatureReading(BaseModel):
 
 
 # HU-12
+ReviewStatus = Literal["EN_REVISION", "VALIDADO", "DESCARTADO"]
+
+
 class NeighborhoodReport(BaseModel):
     id: int
-    photo_path: str
-    original_filename: str
+    photo_path: str | None
+    original_filename: str | None
     latitude: float
     longitude: float
     description: str
-    status: Literal["PENDIENTE"]
+    status: Literal["PENDIENTE"] | ReviewStatus
     created_at: str
+    location_label: str = ""
+
+    @field_validator("photo_path", "original_filename", mode="before")
+    @classmethod
+    def empty_photo_field(cls, value):
+        return value or None
+
+
+class CitizenNeighborhoodReport(NeighborhoodReport):
+    reviewed_at: str | None
+
+
+class NeighborhoodReportReview(CitizenNeighborhoodReport):
+    alert_id: int | None
+    reviewed_by: str | None
+
+
+class ReportStatusUpdate(BaseModel):
+    status: ReviewStatus
+
+
+class ReportAlertLink(BaseModel):
+    alert_id: int = Field(gt=0)
 
 
 # HU-15
@@ -126,9 +179,6 @@ class WaterRequest(BaseModel):
 
 
 # Operaciones del panel y pruebas Hito 2
-class ActorAction(BaseModel):
-    actor: str = Field(min_length=2, max_length=80)
-
 class SafeCheckinCreate(BaseModel):
     alias: str = Field(min_length=2, max_length=80)
     sector: str = Field(min_length=2, max_length=120)

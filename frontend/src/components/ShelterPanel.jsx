@@ -1,29 +1,19 @@
 import { useEffect, useState } from 'react'
-
-const API = '' // Proxy /api de Vite, también compatible con acceso por red local
+import { api, jsonOptions } from '../lib/api'
 
 export default function ShelterPanel() {
   const [shelters, setShelters] = useState([])
   const [message, setMessage] = useState('')
 
   async function loadShelters() {
-    const response = await fetch(`${API}/api/shelters`)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.detail || 'No fue posible cargar los albergues')
-    setShelters(data)
+    setShelters(await api('/api/shelters'))
   }
 
   async function toggleStatus(shelter) {
     const status = shelter.status === 'ABIERTO' ? 'CERRADO' : 'ABIERTO'
     setMessage('')
     try {
-      const response = await fetch(`${API}/api/shelters/${shelter.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.detail || 'No fue posible cambiar el estado')
+      const data = await api(`/api/shelters/${shelter.id}/status`, jsonOptions('PATCH', { status }))
       setMessage(`${data.name}: ${status === 'ABIERTO' ? 'abierto' : 'cerrado'}.`)
       await loadShelters()
     } catch (error) {
@@ -38,13 +28,7 @@ export default function ShelterPanel() {
   async function change(id, delta) {
     setMessage('')
     try {
-      const response = await fetch(`${API}/api/shelters/${id}/occupancy`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delta }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.detail || 'No fue posible actualizar los cupos')
+      const data = await api(`/api/shelters/${id}/occupancy`, jsonOptions('PATCH', { delta }))
       setMessage(`${data.name}: ${data.occupancy}/${data.capacity} personas.`)
       await loadShelters()
     } catch (error) {
@@ -58,7 +42,7 @@ export default function ShelterPanel() {
         <div>
           <h2>Cupos de albergues</h2>
         </div>
-        <button className="secondary" onClick={loadShelters}>Actualizar</button>
+        <button className="secondary" onClick={() => loadShelters().catch(error => setMessage(error.message))}>Actualizar</button>
       </div>
       {message && <div className="mini-notice">{message}</div>}
       <div className="shelter-grid">

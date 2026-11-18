@@ -6,9 +6,9 @@ import { isValidPoint } from '../lib/maxi'
 
 const center = [-33.0472, -71.6127]
 const statusLabel = {
-  DISPONIBLE: 'Disponible (simulado)',
-  SIN_AGUA: 'Sin agua (simulado)',
-  EN_REVISION: 'En revisión (simulado)',
+  DISPONIBLE: 'Disponible',
+  SIN_AGUA: 'Sin agua',
+  EN_REVISION: 'En revisión',
 }
 const statusColor = { DISPONIBLE: '#38d6a1', SIN_AGUA: '#f36a72', EN_REVISION: '#ffd36a' }
 const pointIcon = (status) => L.divIcon({
@@ -45,7 +45,7 @@ export default function HydrantMap({ items = [], selected = null, onPick, enable
       <MapRefresh pointCount={displayPoints.length} />
       {enabled && onPick && <LocationClick onPick={onPick} />}
       {displayPoints.map(point => <Marker key={point.id} position={[Number(point.latitude), Number(point.longitude)]} icon={pointIcon(point.status)}>
-        <Popup><strong>{point.name}</strong><br />{statusLabel[point.status] || point.status}</Popup>
+        <Popup><strong>{point.name}</strong><br />{statusLabel[point.status] || point.status}{(point.demo || point.demo_local) && <><br />Registro de práctica</>}</Popup>
       </Marker>)}
       {enabled && selected && <Marker position={[selected.lat, selected.lng]} icon={pointIcon('EN_REVISION')}>
         <Popup>Punto seleccionado</Popup>

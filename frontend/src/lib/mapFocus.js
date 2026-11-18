@@ -1,14 +1,16 @@
 import { isValidPoint } from './maxi.js'
 
-// La elección explícita de sector SIEMPRE prevalece sobre solicitudes de apoyo
-// que se hayan visualizado anteriormente. Nunca mezclamos ambos focos.
+// El sector seleccionado prevalece sobre otros puntos seleccionados previamente.
 export function resolveMapFocus({
   sector = '', alerts = [], sensors = [], waterRequests = [],
-  focusedWaterRequestId = null, focusAlertId = null,
+  focusedWaterRequestId = null, focusAlertId = null, focusedReport = null,
 } = {}) {
   if (sector) {
     const match = [...alerts, ...sensors].find(isValidPoint)
     return match ? { point: [Number(match.latitude), Number(match.longitude)], zoom: 13, kind: 'sector' } : null
+  }
+  if (isValidPoint(focusedReport)) {
+    return { point: [Number(focusedReport.latitude), Number(focusedReport.longitude)], zoom: 15, kind: 'reporte' }
   }
   if (focusedWaterRequestId != null) {
     const match = waterRequests.find(item => String(item.id) === String(focusedWaterRequestId) && isValidPoint(item))

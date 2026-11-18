@@ -4,7 +4,7 @@
 
 Este proyecto es un **prototipo universitario** para la demo del Hito 2. **No presta servicios de emergencia reales**, no notifica a Bomberos ni tiene catastro certificado de grifos.
 
-La aplicación tiene ahora cuatro pestañas: **Central y mapa**, **Sensores**, **Ciudadanía** y **Logística**. El backend guarda operaciones de prueba en SQLite. El rol seleccionado es **solo para pruebas** y no equivale a autenticación.
+El panel operativo tiene cuatro pestañas: **Central y mapa**, **Sensores**, **Logística** y **Reportes ciudadanos**. La ciudadanía envía reportes, consulta su historial y confirma si está a salvo desde su propio portal. [Consulta cómo crear y probar ambas cuentas](README.md#probar-las-cuentas).
 
 ## Iniciar en Windows
 
@@ -20,7 +20,7 @@ La aplicación tiene ahora cuatro pestañas: **Central y mapa**, **Sensores**, *
    npm.cmd install
    npm.cmd run dev
    ```
-4. Visita **http://localhost:5173**. La API se comprueba en **http://127.0.0.1:8000/docs**.
+4. Visita **http://localhost:5173** e inicia sesión. La documentación de la API está en **http://127.0.0.1:8000/docs**.
 
 **Si PowerShell bloquea `npm`**, usa `npm.cmd`. No vuelvas a ejecutar `cd frontend` si ya estás dentro de esa carpeta.
 
@@ -34,13 +34,14 @@ La aplicación tiene ahora cuatro pestañas: **Central y mapa**, **Sensores**, *
 | 2 | Central | Validar foco y confirmar | Estado VALIDADO y marcador rojo, incluso tras actualizar |
 | 3 | Central | Simular otra alerta y descartar | Falsa alarma guardada en historial, oculta del mapa |
 | 4 | Central | Filtrar sector | Lista y mapa acotados al sector elegido |
-| 5 | Ciudadanía | Estoy a salvo | Nuevo registro de prueba en la API |
-| 6 | Logística | Elegir rol municipal o bombero | Habilita la gestión de grifos de prueba |
-| 7 | Logística | Rellenar ejemplo ficticio, guardar, volver a Central | Grifo de práctica marcado con gota en el mapa cuando el rol está habilitado |
+| 5 | Portal ciudadano | Estoy a salvo | Nuevo registro de prueba en la API |
+| 6 | Logística | Entrar con una cuenta `municipal` o `bombero` | Gestión de grifos de prueba habilitada |
+| 7 | Logística | Rellenar ejemplo ficticio, guardar, volver a Central | Grifo de práctica marcado con gota en el mapa |
 | 8 | Sensores | Cambiar batería, viento y ver temperatura | Pruebas de módulos existentes |
-| 9 | Ciudadanía / Logística | Reporte vecinal, albergues, solicitud de agua | Se conservaron las funciones de tus compañeros |
+| 9 | Portal ciudadano / Reportes ciudadanos | Enviar un reporte, abrirlo en el mapa y marcarlo como en revisión | Los dos usuarios ven el estado actualizado |
+| 10 | Reportes ciudadanos | Validar el reporte y vincularlo a una alerta existente | El reporte muestra el vínculo; la alerta conserva su estado |
 
-**Importante:** El rol es una **simulación con cabecera HTTP controlable**. Se agregó validación en la API, pero no hay usuarios registrados ni permisos reales. Por tanto, el rol oficial de la HU-05/HU-14 **no está terminado para un entorno real**. Tampoco existe un catastro oficial de grifos; sus coordenadas son ingresadas por el usuario y etiquetadas como ficticias.
+Los grifos de práctica se etiquetan como ficticios.
 
 ## Pruebas
 
@@ -58,7 +59,7 @@ npm.cmd test
 npm.cmd run build
 ```
 
-El `npm.cmd test` requiere instalar las dependencias con `npm.cmd install` primero. Los 6 tests de componentes incluyen renderizado, eventos, estado, condicionales y comunicación con API simulada.
+El `npm.cmd test` requiere instalar las dependencias con `npm.cmd install` primero. Las pruebas de React comprueban los componentes y las redirecciones de ambas cuentas.
 
 ## Evidencias para la rúbrica
 

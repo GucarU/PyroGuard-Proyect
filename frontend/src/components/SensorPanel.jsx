@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import TemperatureModal from './TemperatureModal'
-
-const API = '' // Proxy /api de Vite, también compatible con acceso por red local
+import { api, jsonOptions } from '../lib/api'
 
 function batteryLabel(level) {
   if (level <= 15) return 'Crítica'
@@ -34,9 +33,7 @@ export default function SensorPanel({ onStatusesChange }) {
   const [message, setMessage] = useState('')
 
   async function loadSensors() {
-    const response = await fetch(`${API}/api/sensors/status`)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.detail || 'No fue posible cargar sensores')
+    const data = await api('/api/sensors/status')
     setSensors(data)
     onStatusesChange?.(data)
   }
@@ -50,13 +47,7 @@ export default function SensorPanel({ onStatusesChange }) {
   async function patchSensor(sensorId, endpoint, payload, successMessage) {
     setMessage('')
     try {
-      const response = await fetch(`${API}/api/sensors/${sensorId}/${endpoint}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.detail || 'No fue posible actualizar el sensor')
+      await api(`/api/sensors/${sensorId}/${endpoint}`, jsonOptions('PATCH', payload))
       setMessage(successMessage)
       await loadSensors()
     } catch (error) {

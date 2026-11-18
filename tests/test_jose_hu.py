@@ -51,17 +51,18 @@ def test_hu04_viento_sobre_umbral_activa_advertencia(client, monkeypatch):
     assert payload["longitude"] is not None
 
 
-def test_hu12_reporte_vecinal_guarda_foto_y_gps(client, tmp_path, monkeypatch):
+def test_hu12_reporte_vecinal_guarda_foto_y_gps(client, citizen_client, tmp_path, monkeypatch, image_bytes):
     upload_dir = tmp_path / "uploads"
     monkeypatch.setenv("PYROGUARD_UPLOAD_DIR", str(upload_dir))
-    response = client.post(
+    jpeg = image_bytes("JPEG")
+    response = citizen_client.post(
         "/api/reports/neighborhood",
         data={
             "latitude": "-33.0472",
             "longitude": "-71.6127",
             "description": "Humo visible desde el cerro",
         },
-        files={"photo": ("foco.jpg", b"foto-de-prueba", "image/jpeg")},
+        files={"photo": ("foco.jpg", jpeg, "image/jpeg")},
     )
     assert response.status_code == 201
     payload = response.json()
@@ -75,10 +76,12 @@ def test_hu12_reporte_vecinal_guarda_foto_y_gps(client, tmp_path, monkeypatch):
     listed = client.get("/api/reports/neighborhood")
     assert listed.status_code == 200
     assert listed.json()[0]["id"] == payload["id"]
+    assert citizen_client.get(payload["photo_path"]).status_code == 403
+    assert client.get(payload["photo_path"]).content == jpeg
 
 
-def test_hu12_rechaza_extension_no_permitida(client):
-    response = client.post(
+def test_hu12_rechaza_extension_no_permitida(citizen_client):
+    response = citizen_client.post(
         "/api/reports/neighborhood",
         data={"latitude": "-33", "longitude": "-71", "description": "prueba"},
         files={"photo": ("archivo.txt", b"x", "text/plain")},

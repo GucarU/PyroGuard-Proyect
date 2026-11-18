@@ -1,6 +1,7 @@
 @echo off
 cd /d "%~dp0frontend"
-if not exist "node_modules\.bin\vite.cmd" (
+call npm.cmd ls --depth=0 >nul 2>&1
+if errorlevel 1 (
   echo [PyroGuard] Instalando dependencias... requiere internet en primer arranque.
   call npm.cmd install
 )

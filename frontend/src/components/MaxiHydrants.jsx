@@ -3,23 +3,23 @@ import { api, jsonOptions } from '../lib/api'
 import { canViewHydrants, EXAMPLE_HYDRANTS } from '../lib/maxi'
 import HydrantMap from './HydrantMap'
 
-export default function MaxiHydrants({ role, onHydrantsChange, onChangeRole }) {
-  const allowed = canViewHydrants(role)
+export default function MaxiHydrants({ profile, onHydrantsChange }) {
+  const allowed = canViewHydrants(profile)
   const [items, setItems] = useState([])
   const [name, setName] = useState('')
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
   const [status, setStatus] = useState('EN_REVISION')
   const [visible, setVisible] = useState(true)
+  const [preview, setPreview] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const displayItems = items.length ? items : EXAMPLE_HYDRANTS
   const selected = latitude !== '' && longitude !== '' ? { lat: Number(latitude), lng: Number(longitude) } : null
 
   async function refresh() {
-    const list = await api('/api/hydrants', { headers: { 'X-Pyroguard-Role': role } })
+    const list = await api('/api/hydrants')
     setItems(list)
     onHydrantsChange(list, visible)
     setError('')
@@ -32,7 +32,7 @@ export default function MaxiHydrants({ role, onHydrantsChange, onChangeRole }) {
       return
     }
     let active = true
-    api('/api/hydrants', { headers: { 'X-Pyroguard-Role': role } })
+    api('/api/hydrants')
       .then(list => {
         if (active) {
           setItems(list)
@@ -42,7 +42,7 @@ export default function MaxiHydrants({ role, onHydrantsChange, onChangeRole }) {
       })
       .catch(e => { if (active) setError(e.message) })
     return () => { active = false }
-  }, [role])
+  }, [allowed])
 
   function toggle() {
     const next = !visible
@@ -64,7 +64,7 @@ export default function MaxiHydrants({ role, onHydrantsChange, onChangeRole }) {
     try {
       const next = await api('/api/hydrants', jsonOptions('POST', {
         name: name.trim(), latitude: Number(latitude), longitude: Number(longitude), status,
-      }, { 'X-Pyroguard-Role': role }))
+      }))
       setName('')
       setLatitude('')
       setLongitude('')
@@ -78,18 +78,15 @@ export default function MaxiHydrants({ role, onHydrantsChange, onChangeRole }) {
       <div><h2>Grifos en el mapa</h2></div>
       {allowed && <button type="button" className="secondary" onClick={toggle}>{visible ? 'Ocultar en central' : 'Mostrar en central'}</button>}
     </div>
-    <p className="muted-text">Grifos de práctica sobre OpenStreetMap. No se está usando un catastro oficial ni un inicio de sesión real.</p>
-
     {!allowed && <div className="role-help-panel">
-      <strong>Estás viendo el rol «{role}»</strong>
-      <p>Capa disponible para roles de bomberos y municipalidad. Para ver y colocar pines de grifos, usa el rol Bombero o Municipal. El cambio aquí es solo para practicar la interfaz.</p>
-      <button type="button" onClick={() => onChangeRole?.('bombero')}>Ver mapa como Bombero (demo)</button>
+      <p>Capa disponible para los perfiles Bombero y Municipal.</p>
     </div>}
 
-    <HydrantMap items={displayItems} selected={selected} enabled={allowed} onPick={onPick} />
-
     {allowed && <>
-      <p className="muted-text">{items.length ? `${items.length} grifos de prueba guardados en SQLite.` : 'Se muestran tres ejemplos ficticios para que puedas probar los pines. Todavía no hay registros guardados.'} {visible ? 'La capa también se ve en el mapa de Central.' : 'La capa está oculta en Central.'}</p>
+      {!items.length && <button type="button" className="secondary small-button" aria-pressed={preview}
+        onClick={() => setPreview(current => !current)}>{preview ? 'Ocultar ejemplos' : 'Ver grifos de ejemplo'}</button>}
+      <HydrantMap items={!items.length && preview ? EXAMPLE_HYDRANTS : items} selected={selected} enabled onPick={onPick} />
+      <p className="muted-text">{items.length ? `${items.length} grifos guardados.` : 'Todavía no hay grifos guardados.'} {visible ? 'La capa se ve en el mapa de Central.' : 'La capa está oculta en Central.'}</p>
       <form className="report-form compact-form" onSubmit={submit}>
         <h3>Agregar un grifo de prueba</h3>
         <p className="muted-text">Haz clic en el mapa superior para completar la ubicación automáticamente.</p>

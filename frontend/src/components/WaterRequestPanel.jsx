@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { api, jsonOptions } from '../lib/api'
 
-const API = '' // Proxy /api de Vite, también compatible con acceso por red local
 const defaultCenter = [-33.0472, -71.6127]
 
 const requestIcon = L.divIcon({
@@ -40,10 +40,7 @@ export default function WaterRequestPanel({ onRequestCreated, onShowInCentral })
   const [lastCreated, setLastCreated] = useState(null)
 
   async function loadRequests() {
-    const response = await fetch(`${API}/api/water-requests`)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.detail || 'No fue posible cargar las solicitudes')
-    setRequests(data)
+    setRequests(await api('/api/water-requests'))
   }
 
   useEffect(() => {
@@ -77,18 +74,12 @@ export default function WaterRequestPanel({ onRequestCreated, onShowInCentral })
     setBusy(true)
     setMessage('')
     try {
-      const response = await fetch(`${API}/api/water-requests`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requester,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
-          description,
-        }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.detail || 'No fue posible enviar la solicitud')
+      const data = await api('/api/water-requests', jsonOptions('POST', {
+        requester,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        description,
+      }))
       setMessage(`Solicitud #${data.id} recibida. Ya aparece en el mapa central con un marcador 🚒.`)
       setLastCreated(data)
       onRequestCreated?.(data)
