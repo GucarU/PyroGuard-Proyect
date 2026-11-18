@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from ..auth import (
     SESSION_COOKIE,
     EmailAlreadyRegistered,
+    ReservedAdminEmail,
     create_user,
     current_user,
     revoke_session,
@@ -33,6 +34,8 @@ def register(account: CitizenRegistration, request: Request, response: Response)
             token, lifetime = start_session(db, user, request.cookies.get(SESSION_COOKIE))
     except EmailAlreadyRegistered as error:
         raise HTTPException(409, "Ya hay una cuenta registrada con este correo.") from error
+    except ReservedAdminEmail as error:
+        raise HTTPException(409, "Ese correo está reservado. Usa un correo ciudadano.") from error
     response.set_cookie(SESSION_COOKIE, token, max_age=lifetime, **_cookie_options(request))
     return user
 

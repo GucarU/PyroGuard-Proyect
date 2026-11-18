@@ -1,7 +1,10 @@
 """Endpoints de consulta y despacho de alertas."""
-from fastapi import APIRouter, HTTPException, Query
+from typing import Annotated
 
-from ..schemas import Alert, DispatchRequest
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from ..auth import require_admin
+from ..schemas import Alert, AuthUser, DispatchRequest
 from ..services import alert_service
 
 router = APIRouter(prefix="/api/alerts", tags=["Alertas"])
@@ -22,9 +25,9 @@ def get_alert(alert_id: int):
 
 
 @router.patch("/{alert_id}/dispatch", response_model=Alert)
-def dispatch_unit(alert_id: int, request: DispatchRequest):
+def dispatch_unit(alert_id: int, request: DispatchRequest, user: Annotated[AuthUser, Depends(require_admin)]):
     try:
-        return alert_service.dispatch_unit(alert_id, request)
+        return alert_service.dispatch_unit(alert_id, request, user)
     except alert_service.AlertNotFoundError:
         raise HTTPException(status_code=404, detail="Alerta no encontrada.")
     except alert_service.AlertAlreadyDispatchedError:

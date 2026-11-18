@@ -27,6 +27,20 @@ export function isValidPoint(item) {
 export function canViewHydrants(role) {
   return ['bombero', 'bomberos', 'municipal', 'municipalidad', 'oficial_bomberos'].includes(String(role ?? '').trim().toLowerCase())
 }
+export const HYDRANT_STATES = {
+  DISPONIBLE: { label: 'Disponible', color: '#38d6a1' },
+  EN_REVISION: { label: 'En revisión', color: '#ffd36a' },
+  SIN_AGUA: { label: 'Sin agua', color: '#f36a72' },
+}
+export const NO_HYDRANT_SECTOR = '__sin_sector__'
+
+export function filterHydrants(items, { sector, status }) {
+  const inSector = sector === NO_HYDRANT_SECTOR
+    ? items.filter(item => !normalizeSector(item.sector))
+    : filterBySector(items, sector)
+  return status ? inSector.filter(item => item.status === status) : inSector
+}
+
 export function markerColor(alert) {
   if (isInactiveIncident(alert)) return '#77838a'
   if (['VALIDADO', 'CONFIRMADO'].includes(String(alert?.status ?? '').toUpperCase())) return '#ed4040'

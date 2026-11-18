@@ -4,6 +4,7 @@ import { activeMapAlerts, isValidPoint, markerColor } from '../lib/maxi'
 import { mapWaterRequests, waterRequestStatus } from '../lib/waterRequests'
 import { resolveMapFocus } from '../lib/mapFocus'
 import { ReportStatus } from './ReportDetails'
+import HydrantMarker, { HydrantLegend } from './HydrantMarker'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -26,13 +27,6 @@ const squadRequestIcon = L.divIcon({
   html: '<span>🚒</span>',
   iconSize: [42, 42],
   iconAnchor: [21, 21],
-})
-
-const hydrantIcon = L.divIcon({
-  className: 'hydrant-map-icon',
-  html: '<span>💧</span>',
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
 })
 
 function WaterRequestMarker({ request, focused, focusVersion }) {
@@ -80,23 +74,29 @@ function FocusSector({ sector, alerts, sensors, focusAlertId, waterRequests, foc
   return null
 }
 
-function ReportMarker({ report }) {
+const reportMarkerStyle = { color: '#5c318d', fillColor: '#a980e7', fillOpacity: .9 }
+
+function ReportMarker({ report, focused }) {
   const marker = useRef(null)
-  useEffect(() => { marker.current?.openPopup() }, [report.id])
-  return <CircleMarker ref={marker} center={[report.latitude, report.longitude]} radius={9}
-    pathOptions={{ color: '#6d48a7', fillColor: '#a980e7', fillOpacity: .85 }}>
+  useEffect(() => {
+    if (focused) marker.current?.openPopup()
+  }, [focused])
+  return <CircleMarker ref={marker} center={[report.latitude, report.longitude]} radius={9} className="citizen-report-marker"
+    pathOptions={reportMarkerStyle}>
     <Popup autoPan={false}>
       <strong>Reporte ciudadano #{report.id}</strong><br />
+      {report.location_label && <>{report.location_label}<br /></>}
       <ReportStatus status={report.status} />
     </Popup>
   </CircleMarker>
 }
 
-export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], selectedSector = '', focusAlertId = null, hydrants = [], showHydrants = false, waterRequests = [], focusedWaterRequestId = null, focusedWaterRequestVersion = 0, focusedReport = null }) {
+export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], selectedSector = '', focusAlertId = null, hydrants = [], showHydrants = false, waterRequests = [], focusedWaterRequestId = null, focusedWaterRequestVersion = 0, focusedReport = null, reports = [], reportsError = '' }) {
   const validAlerts = activeMapAlerts(alerts)
   const validWaterRequests = mapWaterRequests(waterRequests)
   const validSensors = sensorStatuses.filter(isValidPoint)
   const windSensors = validSensors.filter(sensor => sensor.wind_alert)
+  const validReports = reports.filter(isValidPoint)
 
   return (
     <section id="mapa-central" className="map-section alerts-section">
@@ -107,7 +107,9 @@ export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], s
         </div>
       </div>
 
-      <p className="map-legend">🟠 Alerta pendiente · 🔴 Incendio validado · 🟢 Sensor · 🏠 Albergue · 💧 Grifo · 🚒 Solicitud de apoyo{focusedReport && ' · 🟣 Reporte ciudadano'}</p>
+      <p className="map-legend">🟠 Alerta pendiente · 🔴 Incendio validado · 🟢 Sensor · 🏠 Albergue · 🚒 Solicitud de apoyo · 🟣 Reporte ciudadano</p>
+      {reportsError && <p className="muted-text" role="status">No se pudieron actualizar los reportes ciudadanos.</p>}
+      {showHydrants && <p className="map-legend">Grifos <HydrantLegend /></p>}
       <MapContainer
         center={[-33.0472, -71.6127]}
         zoom={11}
@@ -157,10 +159,8 @@ export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], s
           <WaterRequestMarker key={`request-${request.id}`} request={request} focused={request.id === focusedWaterRequestId} focusVersion={focusedWaterRequestVersion} />
         ))}
 
-        {showHydrants && hydrants.filter(isValidPoint).map((hydrant) => (
-          <Marker key={`hydrant-${hydrant.id}`} position={[Number(hydrant.latitude), Number(hydrant.longitude)]} icon={hydrantIcon}>
-            <Popup><strong>{hydrant.name}</strong><br />Estado: {hydrant.status}{hydrant.demo && <><br /><strong>REGISTRO DE PRÁCTICA</strong></>}</Popup>
-          </Marker>
+        {showHydrants && hydrants.filter(isValidPoint).map(hydrant => (
+          <HydrantMarker key={`hydrant-${hydrant.id}`} hydrant={hydrant} />
         ))}
 
         {shelters.filter(isValidPoint).map((shelter) => (
@@ -177,7 +177,9 @@ export default function AlertMap({ alerts, sensorStatuses = [], shelters = [], s
             </Popup>
           </Marker>
         ))}
-        {isValidPoint(focusedReport) && <ReportMarker report={focusedReport} />}
+        {validReports.map(report => (
+          <ReportMarker key={report.id} report={report} focused={report.id === focusedReport?.id} />
+        ))}
       </MapContainer>
       <p className="muted-text" style={{marginBottom:0, fontSize:'.83rem'}}>Si el mapa no muestra calles, comprueba Internet: las imágenes cartográficas se cargan desde OpenStreetMap. Puedes ampliar o arrastrar el mapa.</p>
     </section>

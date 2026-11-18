@@ -13,7 +13,7 @@ from typing import Literal
 
 from .. import database
 from ..repositories import alert_repository
-from ..schemas import Alert, DispatchRequest, SensorDetection
+from ..schemas import Alert, AlertAction, AlertDecision, AuthUser, DispatchRequest, SensorDetection
 
 Priority = Literal["BAJA", "MEDIA", "ALTA"]
 
@@ -24,6 +24,10 @@ class AlertNotFoundError(Exception):
 
 class AlertAlreadyDispatchedError(Exception):
     """La alerta ya tenía una unidad despachada (-> 409)."""
+
+
+class AlertDecisionConflictError(Exception):
+    """El estado actual no admite la decisión solicitada."""
 
 
 class AlertPersistenceError(Exception):
@@ -88,16 +92,53 @@ def get_alert(alert_id: int) -> Alert:
     return alert
 
 
-def dispatch_unit(alert_id: int, request: DispatchRequest) -> Alert:
-    """Despacha una unidad (extra, pendiente de registrar como CA-04)."""
-    dispatched_at = datetime.now(timezone.utc).isoformat()
+def dispatch_unit(alert_id: int, request: DispatchRequest, actor: AuthUser) -> Alert:
     with _open_db_connection() as conn:
+        conn.execute("BEGIN IMMEDIATE")
         alert = alert_repository.get_alert(conn, alert_id)
         if alert is None:
             raise AlertNotFoundError(alert_id)
         if alert.status != "PENDIENTE":
             raise AlertAlreadyDispatchedError(alert_id)
-        return alert_repository.mark_dispatched(conn, alert_id, request.unit, dispatched_at)
+        dispatched_at = datetime.now(timezone.utc).isoformat()
+        updated = alert_repository.mark_dispatched(conn, alert_id, request.unit, dispatched_at)
+        alert_repository.record_action(conn, alert_id, actor, "UNIDAD_DESPACHADA", dispatched_at)
+        return updated
+
+
+def decide_alert(alert_id: int, decision: AlertDecision, actor: AuthUser) -> Alert:
+    with _open_db_connection() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        alert = alert_repository.get_alert(conn, alert_id)
+        if alert is None:
+            raise AlertNotFoundError(alert_id)
+        if decision == "VALIDADO" and alert.status not in {"PENDIENTE", "UNIDAD_DESPACHADA"}:
+            raise AlertDecisionConflictError("El foco ya fue validado o descartado")
+        if decision == "FALSA_ALARMA" and alert.status != "PENDIENTE":
+            raise AlertDecisionConflictError("Solo se pueden descartar focos pendientes sin despacho")
+        acted_at = datetime.now(timezone.utc).isoformat()
+        updated = alert_repository.mark_decision(conn, alert_id, decision, actor.name, acted_at)
+        alert_repository.record_action(conn, alert_id, actor, decision, acted_at)
+        return updated
+
+
+def list_alert_history(alert_id: int) -> list[AlertAction]:
+    with _open_db_connection() as conn:
+        conn.execute("BEGIN")
+        alert = alert_repository.get_alert(conn, alert_id)
+        if alert is None:
+            raise AlertNotFoundError(alert_id)
+        actions = alert_repository.list_actions(conn, alert_id)
+
+    recorded = {entry.action for entry in actions}
+    for action, name, date in (
+        ("UNIDAD_DESPACHADA", None, alert.dispatched_at),
+        ("VALIDADO", alert.validated_by, alert.validated_at),
+        ("FALSA_ALARMA", alert.discarded_by, alert.discarded_at),
+    ):
+        if action not in recorded and (name or date):
+            actions.append(AlertAction(alert_id=alert_id, action=action, actor_name=name, acted_at=date))
+    return sorted(actions, key=lambda entry: entry.acted_at or "")
 
 
 def clear_alerts() -> None:

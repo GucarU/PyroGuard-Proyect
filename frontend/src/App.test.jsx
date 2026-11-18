@@ -2,10 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import App from './App'
 
-vi.mock('./components/AlertMap', () => ({ default: () => <div aria-label="Mapa de operaciones" /> }))
+vi.mock('./components/AlertMap', () => ({
+  default: ({ reports }) => <div aria-label="Mapa de operaciones">
+    {reports.map(item => <span key={item.id}>Marcador ciudadano #{item.id}</span>)}
+  </div>,
+}))
 vi.mock('./components/ReportLocationMap', () => ({ default: () => <div aria-label="Mapa para elegir el lugar del incendio" /> }))
 
-const admin = { id: 1, name: 'Personal PyroGuard', email: 'operador@example.com', role: 'ADMIN', profile: 'operador' }
+const admin = { id: 1, name: 'Personal PyroGuard', email: 'admin.pyroguard@example.com', role: 'ADMIN', profile: 'operador' }
 const citizen = { id: 2, name: 'Ana Pérez', email: 'ana@example.com', role: 'CIUDADANO', profile: null }
 const password = 'Una frase privada 123'
 const report = {
@@ -35,7 +39,8 @@ function simulateApi({ session = null, accounts = [admin, citizen], reports = []
       session = null
       return reply(204)
     }
-    if (path === '/api/reports/neighborhood/mine' && session?.role === 'CIUDADANO') return reply(200, reports)
+    if (path === '/api/reports/neighborhood/mine' && session?.role === 'CIUDADANO') return reply(200, reports.slice())
+    if (path === '/api/reports/neighborhood' && session?.role === 'ADMIN') return reply(200, reports.slice())
     return session ? reply(200, []) : reply(401, { detail: 'Tu sesión expiró.' })
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -175,6 +180,35 @@ describe('Acceso a PyroGuard', () => {
     expect(screen.queryByRole('button', { name: 'Ver registros de evacuación' })).not.toBeInTheDocument()
   })
 
+  it('actualiza la bandeja y el mapa administrativo con el mismo reporte entrante', async () => {
+    const reports = []
+    simulateApi({ session: admin, reports })
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Centro de coordinación' })
+    expect(screen.queryByText('Marcador ciudadano #4')).not.toBeInTheDocument()
+
+    reports.push({ ...report, status: 'PENDIENTE', photo_path: null })
+    fireEvent(window, new Event('focus'))
+    expect(await screen.findByText('Marcador ciudadano #4')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Reportes ciudadanos' }))
+    const table = await screen.findByRole('table')
+    expect(within(table).getByText(report.description)).toBeInTheDocument()
+    expect(within(table).getByText('Pendiente')).toBeInTheDocument()
+  })
+
+  it('actualiza el estado de la revisión en el historial de su autor', async () => {
+    const reports = [{ ...report, status: 'PENDIENTE' }]
+    simulateApi({ session: citizen, reports })
+    render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Mis reportes' }))
+    expect(await screen.findByText('Pendiente')).toBeInTheDocument()
+
+    reports[0] = { ...report, status: 'DESCARTADO' }
+    fireEvent(window, new Event('focus'))
+    expect(await screen.findByText('Descartado')).toBeInTheDocument()
+    expect(screen.queryByText('Pendiente')).not.toBeInTheDocument()
+  })
+
   it('informa al ciudadano que su sesión expiró al verificarla de nuevo', async () => {
     const { expire } = simulateApi({ session: citizen })
     render(<App />)
@@ -196,7 +230,7 @@ describe('Acceso a PyroGuard', () => {
     const portal = heading.closest('.citizen-app')
     expect(portal).toHaveAttribute('data-theme', 'dark')
     changeSystem(false)
-    expect(portal).toHaveAttribute('data-theme', 'light')
+    await waitFor(() => expect(portal).toHaveAttribute('data-theme', 'light'))
 
     selectAppearance('Claro')
     changeSystem(true)

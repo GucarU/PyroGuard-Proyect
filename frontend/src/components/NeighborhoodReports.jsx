@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { api, jsonOptions } from '../lib/api'
-import { REPORTS_ENDPOINT, REPORT_STATES, ReportPhoto, ReportStatus, reportDate, reportLocation, useReportList } from './ReportDetails'
+import { REPORTS_ENDPOINT, REPORT_STATES, ReportPhoto, ReportStatus, reportDate, reportLocation } from './ReportDetails'
 
-export default function NeighborhoodReports({ alerts, onShowReport }) {
-  const { reports, setReports, error, loading, refresh } = useReportList(REPORTS_ENDPOINT)
+export default function NeighborhoodReports({ alerts, reportFeed, onShowReport }) {
+  const { reports, updateReport, error, loading, refresh } = reportFeed
   const [filter, setFilter] = useState('')
   const [confirmation, setConfirmation] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -18,7 +18,7 @@ export default function NeighborhoodReports({ alerts, onShowReport }) {
     setConfirmation(null)
     try {
       const updated = await api(`${REPORTS_ENDPOINT}/${id}/${resource}`, options)
-      setReports(items => items.map(item => item.id === id ? updated : item))
+      updateReport(updated)
       const result = resource === 'alert'
         ? `vinculado a la alerta #${updated.alert_id}`
         : REPORT_STATES[updated.status].toLowerCase()

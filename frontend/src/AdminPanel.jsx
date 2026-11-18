@@ -1,13 +1,15 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AlertMap from './components/AlertMap'
 import NeighborhoodReports from './components/NeighborhoodReports'
+import { REPORTS_ENDPOINT, useReportList } from './components/ReportDetails'
 import ShelterPanel from './components/ShelterPanel'
 import WaterRequestPanel from './components/WaterRequestPanel'
 import MaxiIncidentActions from './components/MaxiIncidentActions'
 import MaxiSectorFilter from './components/MaxiSectorFilter'
 import MaxiSafeCheckin from './components/MaxiSafeCheckin'
 import MaxiHydrants from './components/MaxiHydrants'
-import { canViewHydrants, filterBySector } from './lib/maxi'
+import HydrantFilters from './components/HydrantFilters'
+import { canViewHydrants, filterBySector, filterHydrants } from './lib/maxi'
 import { api, jsonOptions } from './lib/api'
 import { createRandomDetection } from './lib/demoDetections'
 import { mapWaterRequests, waterRequestStatus } from './lib/waterRequests'
@@ -28,10 +30,15 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
   const [sensorStatuses, setSensorStatuses] = useState([])
   const [shelters, setShelters] = useState([])
   const [hydrants, setHydrants] = useState([])
+  const [hydrantFilters, setHydrantFilters] = useState({ sector: '', status: '' })
+  const [hydrantError, setHydrantError] = useState('')
+  const hydrantReadVersion = useRef(0)
   const [waterRequests, setWaterRequests] = useState([])
   const [focusedWaterRequestId, setFocusedWaterRequestId] = useState(null)
   const [focusedWaterRequestVersion, setFocusedWaterRequestVersion] = useState(0)
-  const [focusedReport, setFocusedReport] = useState(null)
+  const reportFeed = useReportList(REPORTS_ENDPOINT)
+  const [focusedReportId, setFocusedReportId] = useState(null)
+  const focusedReport = reportFeed.reports.find(report => report.id === focusedReportId)
   const [showHydrants, setShowHydrants] = useState(true)
   const [backendOk, setBackendOk] = useState(false)
   const [theme, setTheme] = useState('dark')
@@ -45,6 +52,7 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
 
   const visibleAlerts = useMemo(() => filterBySector(alerts, selectedSector), [alerts, selectedSector])
   const visibleSensors = useMemo(() => filterBySector(sensorStatuses, selectedSector), [sensorStatuses, selectedSector])
+  const visibleHydrants = useMemo(() => filterHydrants(hydrants, hydrantFilters), [hydrants, hydrantFilters])
 
   const loadAlerts = useCallback(async () => {
     try {
@@ -87,7 +95,7 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
     setWaterRequests(previous => mapWaterRequests([created, ...previous]))
     setFocusedWaterRequestId(created.id)
     setFocusedWaterRequestVersion(previous => previous + 1)
-    setFocusedReport(null)
+    setFocusedReportId(null)
     // El backend ya confirmó la creación. También refrescamos para asegurar coherencia.
     loadWaterRequests()
   }
@@ -97,18 +105,18 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
     setSelectedSector(sector)
     setFocusedWaterRequestId(null)
     setFocusedWaterRequestVersion(previous => previous + 1)
-    setFocusedReport(null)
+    setFocusedReportId(null)
   }
 
   function showWaterRequestOnCentral(requestId) {
     setFocusedWaterRequestId(requestId)
     setFocusedWaterRequestVersion(previous => previous + 1)
-    setFocusedReport(null)
+    setFocusedReportId(null)
     openCentralMap()
   }
 
   function showReportOnCentral(report) {
-    setFocusedReport(report)
+    setFocusedReportId(report.id)
     setFocusedWaterRequestId(null)
     openCentralMap()
   }
@@ -121,12 +129,22 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
 
   const loadHydrants = useCallback(async () => {
     if (!canManageHydrants) return
+    const version = ++hydrantReadVersion.current
     try {
-      setHydrants(await api('/api/hydrants'))
-    } catch {
-      // Conserva los últimos registros durante una interrupción temporal.
+      const items = await api('/api/hydrants')
+      if (version === hydrantReadVersion.current) {
+        setHydrants(items)
+        setHydrantError('')
+      }
+    } catch (error) {
+      if (version === hydrantReadVersion.current) setHydrantError(error.message)
     }
   }, [canManageHydrants])
+
+  function handleHydrantSaved(saved) {
+    hydrantReadVersion.current++
+    setHydrants(current => [saved, ...current.filter(item => item.id !== saved.id)])
+  }
 
   useEffect(() => {
     const className = theme === 'dark' ? 'dark-theme' : 'light-theme'
@@ -261,7 +279,7 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
             </article>
             <article>
               <span className="quick-label">Recursos</span>
-              <strong>{hydrants.length || 0}</strong>
+              <strong>{showHydrants ? visibleHydrants.length : 0}</strong>
               <small>grifos visibles</small>
             </article>
             <article>
@@ -278,6 +296,7 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
         </section>
 
         <MaxiSectorFilter alerts={alerts} sensors={sensorStatuses} sector={selectedSector} onChange={handleSectorChange} />
+        {canManageHydrants && showHydrants && <HydrantFilters hydrants={hydrants} filters={hydrantFilters} onChange={setHydrantFilters} />}
 
         <AlertMap
           alerts={visibleAlerts}
@@ -285,12 +304,14 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
           shelters={shelters}
           selectedSector={selectedSector}
           focusAlertId={latestAlertId}
-          hydrants={hydrants}
+          hydrants={visibleHydrants}
           showHydrants={showHydrants && canManageHydrants}
           waterRequests={waterRequests}
           focusedWaterRequestId={focusedWaterRequestId}
           focusedWaterRequestVersion={focusedWaterRequestVersion}
           focusedReport={focusedReport}
+          reports={reportFeed.reports}
+          reportsError={reportFeed.error}
         />
 
         <section className="alerts-section" aria-label="Solicitudes de terreno recibidas">
@@ -324,8 +345,14 @@ export default function AdminPanel({ user, onLogout, loggingOut, sessionError })
       {section === 'sensores' && <Suspense fallback={<p role="status">Cargando sensores…</p>}>
         <SensorPanel onStatusesChange={setSensorStatuses} />
       </Suspense>}
-      {section === 'reportes' && <><NeighborhoodReports alerts={alerts} onShowReport={showReportOnCentral} />{canManageHydrants && <MaxiSafeCheckin review />}</>}
-      {section === 'logistica' && <><MaxiHydrants profile={user.profile} onHydrantsChange={(items, visible) => { setHydrants(items); setShowHydrants(visible) }} /><ShelterPanel /><WaterRequestPanel onRequestCreated={handleWaterRequestCreated} onShowInCentral={showWaterRequestOnCentral} /></>}
+      {section === 'reportes' && <><NeighborhoodReports alerts={alerts} reportFeed={reportFeed} onShowReport={showReportOnCentral} />{canManageHydrants && <MaxiSafeCheckin review />}</>}
+      {section === 'logistica' && <>
+        <MaxiHydrants profile={user.profile} items={hydrants} filters={hydrantFilters} onFiltersChange={setHydrantFilters}
+          visible={showHydrants} onToggle={() => setShowHydrants(value => !value)} onSaved={handleHydrantSaved}
+          onRefresh={loadHydrants} loadError={hydrantError} />
+        <ShelterPanel />
+        <WaterRequestPanel onRequestCreated={handleWaterRequestCreated} onShowInCentral={showWaterRequestOnCentral} />
+      </>}
     </main>
   </div>
 }

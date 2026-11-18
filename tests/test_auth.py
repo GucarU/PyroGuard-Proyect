@@ -1,14 +1,18 @@
 import hashlib
 import sqlite3
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from backend.auth import SESSION_COOKIE
+from backend.auth import PASSWORD_HASHER, SESSION_COOKIE
 from backend.database import (
+    ADMIN_EMAIL,
     CREATE_ALERTAS_TABLE,
     CREATE_REPORTES_VECINALES_TABLE,
     CREATE_SENSORES_ESTADO_TABLE,
+    CREATE_SESSIONS_TABLE,
+    CREATE_USERS_TABLE,
     db_connection,
     get_db_path,
 )
@@ -61,31 +65,128 @@ def test_registro_rechaza_privilegios_y_protege_credenciales_en_errores(anonymou
 def test_alta_administrativa_explicita_y_sin_sobrescribir(anonymous_client, monkeypatch):
     from backend.create_admin import main
 
-    credentials = {"email": "admin@example.com", "password": "Frase privada admin 34"}
-    monkeypatch.setenv("PYROGUARD_ADMIN_EMAIL", credentials["email"])
+    credentials = {"email": ADMIN_EMAIL, "password": "Frase privada admin 34"}
+    monkeypatch.delenv("PYROGUARD_ADMIN_EMAIL", raising=False)
+    assert anonymous_client.post("/api/auth/register", json={**ACCOUNT, "email": ADMIN_EMAIL.upper()}).status_code == 409
     monkeypatch.setenv("PYROGUARD_ADMIN_PASSWORD", credentials["password"])
     monkeypatch.setenv("PYROGUARD_ADMIN_PROFILE", "bombero")
     monkeypatch.setenv("PYROGUARD_ADMIN_NAME", "Guardia PyroGuard")
     assert anonymous_client.post("/api/auth/login", json=credentials).status_code == 401
-    main()
-    with pytest.raises(SystemExit, match="ya está registrado"):
-        main()
+    main([])
+    with monkeypatch.context() as other_setup:
+        other_setup.setenv("PYROGUARD_ADMIN_PASSWORD", "Otra contraseña distinta 123")
+        other_setup.setenv("PYROGUARD_ADMIN_PROFILE", "municipal")
+        main([])
     account = anonymous_client.post("/api/auth/login", json=credentials).json()
     assert account["role"] == "ADMIN"
     assert account["profile"] == "bombero"
+    with db_connection() as db:
+        assert db.execute("SELECT count(*) FROM auth_users WHERE role = 'ADMIN'").fetchone()[0] == 1
     assert anonymous_client.get("/api/alerts").status_code == 200
 
     assert anonymous_client.post("/api/auth/register", json=ACCOUNT).status_code == 201
     monkeypatch.setenv("PYROGUARD_ADMIN_EMAIL", ACCOUNT["email"])
-    with pytest.raises(SystemExit, match="ya está registrado"):
-        main()
+    with pytest.raises(SystemExit, match="solo puede ser"):
+        main([])
     assert anonymous_client.get("/api/auth/me").json()["role"] == "CIUDADANO"
+
+
+def test_sqlite_impide_crear_o_promover_un_segundo_admin(client, citizen_client):
+    with db_connection() as db:
+        insert = "INSERT INTO auth_users (name, email, password_hash, role, profile) VALUES ('Prueba', ?, 'hash', ?, ?)"
+        for values in ((ADMIN_EMAIL, "ADMIN", "operador"), ("otro@example.com", "ADMIN", "operador"),
+                       (ADMIN_EMAIL.upper(), "CIUDADANO", None)):
+            with pytest.raises(sqlite3.IntegrityError, match="Cuenta administrativa reservada"):
+                db.execute(insert, values)
+        with pytest.raises(sqlite3.IntegrityError, match="Cuenta administrativa reservada"):
+            db.execute("UPDATE auth_users SET role = 'ADMIN', profile = 'operador' WHERE role = 'CIUDADANO'")
+        assert db.execute("SELECT count(*) FROM auth_users WHERE role = 'ADMIN'").fetchone()[0] == 1
+
+
+def test_conflictos_heredados_preservan_cuentas_y_bloquean_acceso_admin(new_client, monkeypatch, capsys):
+    from backend.create_admin import main
+
+    old_email = "personal-anterior@example.com"
+    old_token = "sesion-anterior"
+    monkeypatch.delenv("PYROGUARD_ADMIN_EMAIL", raising=False)
+    monkeypatch.setenv("PYROGUARD_ADMIN_PASSWORD", ACCOUNT["password"])
+    with sqlite3.connect(get_db_path()) as old_db:
+        old_db.execute(CREATE_USERS_TABLE)
+        old_db.execute(CREATE_SESSIONS_TABLE)
+        old_db.execute("INSERT INTO auth_users VALUES (5, 'Cuenta anterior', ?, ?, 'ADMIN', 'operador')",
+                       (old_email, PASSWORD_HASHER.hash(ACCOUNT["password"])))
+        old_db.execute("INSERT INTO auth_sessions VALUES (?, 5, ?)",
+                       (hashlib.sha256(old_token.encode()).hexdigest(), int(time.time()) + 3600))
+
+    main(["--check"])
+    assert f"ID 5 · {old_email} · ADMIN" in capsys.readouterr().out
+    client = new_client()
+    client.cookies.set(SESSION_COOKIE, old_token)
+    assert client.get("/api/alerts").status_code == 401
+    credentials = {"email": old_email, "password": ACCOUNT["password"]}
+    assert client.post("/api/auth/login", json=credentials).status_code == 401
+    with pytest.raises(SystemExit, match="Resuelve los conflictos"):
+        main([])
+    with db_connection() as db:
+        assert db.execute("SELECT role FROM auth_users WHERE id = 5").fetchone()[0] == "ADMIN"
+        assert db.execute("SELECT count(*) FROM auth_sessions WHERE user_id = 5").fetchone()[0] == 1
+
+    main(["--demote-conflicting-admin", "5"])
+    assert client.get("/api/auth/me").status_code == 401
+    former_admin = client.post("/api/auth/login", json=credentials).json()
+    assert former_admin["id"] == 5 and former_admin["role"] == "CIUDADANO"
+    assert client.get("/api/alerts").status_code == 403
+    main([])
+    with db_connection() as db:
+        assert [(row["email"], row["role"]) for row in db.execute("SELECT email, role FROM auth_users ORDER BY id")] == [
+            (old_email, "CIUDADANO"), (ADMIN_EMAIL, "ADMIN"),
+        ]
+
+
+def test_correo_reservado_heredado_como_ciudadano_no_se_promueve(new_client, capsys):
+    from backend.create_admin import main
+
+    with sqlite3.connect(get_db_path()) as old_db:
+        old_db.execute(CREATE_USERS_TABLE)
+        old_db.execute("INSERT INTO auth_users VALUES (12, 'Vecino anterior', ?, ?, 'CIUDADANO', NULL)",
+                       (ADMIN_EMAIL, PASSWORD_HASHER.hash(ACCOUNT["password"])))
+    main(["--check"])
+    assert f"ID 12 · {ADMIN_EMAIL} · CIUDADANO" in capsys.readouterr().out
+    with pytest.raises(SystemExit, match="Resuelve los conflictos"):
+        main([])
+    citizen = new_client()
+    assert citizen.post("/api/auth/login", json={"email": ADMIN_EMAIL, "password": ACCOUNT["password"]}).json()["role"] == "CIUDADANO"
+    assert citizen.get("/api/alerts").status_code == 403
+
+
+def test_sesiones_admin_independientes_y_rotacion_explicita(login_admin, new_client, monkeypatch):
+    from backend.create_admin import main
+
+    first, second = login_admin(), login_admin()
+    canonical = first.get("/api/auth/me").json()
+    assert second.get("/api/auth/me").json() == canonical
+    assert first.cookies[SESSION_COOKIE] != second.cookies[SESSION_COOKIE]
+    reopened = new_client()
+    reopened.cookies.update(second.cookies)
+    assert reopened.get("/api/auth/me").json() == canonical
+    assert first.post("/api/auth/logout").status_code == 204
+    assert first.get("/api/auth/me").status_code == 401
+    assert reopened.get("/api/alerts").status_code == 200
+
+    monkeypatch.delenv("PYROGUARD_ADMIN_EMAIL", raising=False)
+    monkeypatch.setenv("PYROGUARD_ADMIN_PASSWORD", ACCOUNT["password"])
+    main(["--reset-password"])
+    assert second.get("/api/auth/me").status_code == 401
+    assert reopened.get("/api/alerts").status_code == 401
+    result = second.post("/api/auth/login", json={"email": ADMIN_EMAIL, "password": ACCOUNT["password"]})
+    assert result.json() == canonical
 
 
 def test_apis_operativas_rechazan_anonimos_y_ciudadanos(anonymous_client, citizen_client):
     attempts = [
         ("GET", "/api/alerts"), ("GET", "/api/alerts/1"), ("PATCH", "/api/alerts/1/dispatch"),
         ("PATCH", "/api/alerts/1/validate"), ("PATCH", "/api/alerts/1/discard"), ("GET", "/api/sectors"),
+        ("GET", "/api/alerts/1/history"),
         ("GET", "/api/sensors/status"), ("POST", "/api/sensors/detections"),
         ("PATCH", "/api/sensors/1/wind"), ("PATCH", "/api/sensors/1/battery"),
         ("POST", "/api/sensors/1/temperature"), ("GET", "/api/sensors/1/temperature-history"),
@@ -94,6 +195,7 @@ def test_apis_operativas_rechazan_anonimos_y_ciudadanos(anonymous_client, citize
         ("GET", "/api/reports/neighborhood"), ("GET", "/uploads/123.png"),
         ("PATCH", "/api/reports/neighborhood/1/status"), ("PUT", "/api/reports/neighborhood/1/alert"),
         ("GET", "/api/evacuations/safe"), ("GET", "/api/hydrants"), ("POST", "/api/hydrants"),
+        ("PATCH", "/api/hydrants/1"), ("GET", "/api/hydrants/1/history"),
         ("DELETE", "/api/dev/alerts"),
     ]
     forged_role = {"X-Pyroguard-Role": "bombero"}

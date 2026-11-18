@@ -10,7 +10,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 from fastapi import Depends, HTTPException, Request
 
-from .database import db_connection
+from .database import ADMIN_EMAIL, db_connection
 from .schemas import AuthUser, CitizenRegistration, OperationalProfile
 
 
@@ -23,6 +23,10 @@ class EmailAlreadyRegistered(Exception):
     pass
 
 
+class ReservedAdminEmail(Exception):
+    pass
+
+
 def create_user(
     db: sqlite3.Connection,
     account: CitizenRegistration,
@@ -30,6 +34,8 @@ def create_user(
     profile: OperationalProfile | None = None,
 ) -> AuthUser:
     email = account.email.lower()
+    if (email == ADMIN_EMAIL) != (role == "ADMIN"):
+        raise ReservedAdminEmail
     password_hash = PASSWORD_HASHER.hash(account.password.get_secret_value())
     result = db.execute(
         """INSERT INTO auth_users (name, email, password_hash, role, profile)
@@ -43,20 +49,30 @@ def create_user(
 
 
 def verify_credentials(db: sqlite3.Connection, email: str, password: str) -> AuthUser | None:
-    row = db.execute("SELECT * FROM auth_users WHERE email = ?", (email.lower(),)).fetchone()
+    row = db.execute(
+        "SELECT * FROM auth_users WHERE email = ? AND (role <> 'ADMIN' OR email = ?)",
+        (email.lower(), ADMIN_EMAIL),
+    ).fetchone()
     stored_hash = row["password_hash"] if row is not None else DUMMY_PASSWORD_HASH
     try:
         PASSWORD_HASHER.verify(stored_hash, password)
     except (VerificationError, InvalidHashError):
         return None
-    if row is not None:
-        if PASSWORD_HASHER.check_needs_rehash(stored_hash):
-            db.execute(
-                "UPDATE auth_users SET password_hash = ? WHERE id = ? AND password_hash = ?",
-                (PASSWORD_HASHER.hash(password), row["id"], stored_hash),
-            )
-        return AuthUser.model_validate(dict(row))
-    return None
+    if row is None:
+        return None
+
+    new_hash = PASSWORD_HASHER.hash(password) if PASSWORD_HASHER.check_needs_rehash(stored_hash) else None
+    # Serialize session creation with password resets once the expensive verification has finished.
+    db.execute("BEGIN IMMEDIATE")
+    current = db.execute(
+        "SELECT * FROM auth_users WHERE id = ? AND password_hash = ? AND email = ? AND role = ?",
+        (row["id"], stored_hash, row["email"], row["role"]),
+    ).fetchone()
+    if current is None:
+        return None
+    if new_hash is not None:
+        db.execute("UPDATE auth_users SET password_hash = ? WHERE id = ?", (new_hash, row["id"]))
+    return AuthUser.model_validate(dict(current))
 
 
 def _token_hash(token: str) -> str:
@@ -91,8 +107,9 @@ def current_user(request: Request) -> AuthUser:
         row = db.execute(
             """SELECT u.id, u.name, u.email, u.role, u.profile
                FROM auth_sessions AS s JOIN auth_users AS u ON u.id = s.user_id
-               WHERE s.token_hash = ? AND s.expires_at > ?""",
-            (_token_hash(token), int(time.time())),
+               WHERE s.token_hash = ? AND s.expires_at > ?
+                 AND (u.role <> 'ADMIN' OR u.email = ?)""",
+            (_token_hash(token), int(time.time()), ADMIN_EMAIL),
         ).fetchone()
     if row is None:
         raise HTTPException(401, "Tu sesión expiró o se cerró. Vuelve a iniciar sesión.")
@@ -100,7 +117,7 @@ def current_user(request: Request) -> AuthUser:
 
 
 def require_admin(user: Annotated[AuthUser, Depends(current_user)]) -> AuthUser:
-    if user.role != "ADMIN":
+    if user.role != "ADMIN" or user.email != ADMIN_EMAIL:
         raise HTTPException(403, "Esta operación requiere una cuenta administrativa.")
     return user
 

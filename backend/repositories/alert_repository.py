@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from ..schemas import Alert
+from ..schemas import Alert, AlertAction, AlertActionType, AlertDecision, AuthUser
 
 
 def _row_to_alert(row: sqlite3.Row) -> Alert:
@@ -77,6 +77,29 @@ def mark_dispatched(
     )
     row = conn.execute("SELECT * FROM alertas WHERE id = ?", (alert_id,)).fetchone()
     return _row_to_alert(row)
+
+
+def mark_decision(conn: sqlite3.Connection, alert_id: int, decision: AlertDecision, actor: str, acted_at: str) -> Alert:
+    name_column, date_column = (
+        ("validated_by", "validated_at") if decision == "VALIDADO" else ("discarded_by", "discarded_at")
+    )
+    row = conn.execute(
+        f"UPDATE alertas SET status = ?, {name_column} = ?, {date_column} = ? WHERE id = ? RETURNING *",
+        (decision, actor, acted_at, alert_id),
+    ).fetchone()
+    return _row_to_alert(row)
+
+
+def record_action(conn: sqlite3.Connection, alert_id: int, actor: AuthUser, action: AlertActionType, acted_at: str) -> None:
+    conn.execute(
+        "INSERT INTO alert_actions (alert_id, actor_id, actor_name, action, acted_at) VALUES (?, ?, ?, ?, ?)",
+        (alert_id, actor.id, actor.name, action, acted_at),
+    )
+
+
+def list_actions(conn: sqlite3.Connection, alert_id: int) -> list[AlertAction]:
+    rows = conn.execute("SELECT * FROM alert_actions WHERE alert_id = ? ORDER BY id", (alert_id,)).fetchall()
+    return [AlertAction(**dict(row)) for row in rows]
 
 
 def delete_all(conn: sqlite3.Connection) -> None:

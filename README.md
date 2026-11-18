@@ -19,16 +19,19 @@ En PowerShell, desde la carpeta principal, ejecuta:
 
 ```powershell
 python -m pip install -r requirements.txt
-$env:PYROGUARD_ADMIN_EMAIL = Read-Host 'Correo para tu cuenta administrativa'
-$env:PYROGUARD_ADMIN_PROFILE = 'bombero'
+python -m backend.create_admin --check
 python -m backend.create_admin
 ```
 
-Usa un correo que todavía no esté registrado. La consola te pide escribir y confirmar una contraseña de 12 a 128 caracteres cuando `PYROGUARD_ADMIN_PASSWORD` está sin definir. En automatización puedes proporcionar esa variable como secreto de entorno. La orden crea la cuenta en la base del backend. Si usas una base personalizada, define el mismo `PYROGUARD_DB` al crear la cuenta y al iniciar PyroGuard.
+El único correo administrativo es `admin.pyroguard@example.com`. Al crear la cuenta, la consola te pide escribir y confirmar una contraseña de 12 a 128 caracteres. Si la cuenta ya existe, conserva su contraseña y su perfil. Para elegir una contraseña nueva, ejecuta `python -m backend.create_admin --reset-password`. Esto cierra todas las sesiones de la cuenta. Si usas una base personalizada, define el mismo `PYROGUARD_DB` al gestionar la cuenta y al iniciar PyroGuard.
 
-Abre `http://localhost:5173` y elige **Iniciar sesión**. Usa el correo y la contraseña de la cuenta operativa. PyroGuard te lleva a `/admin`. El formulario **Registro ciudadano** crea exclusivamente cuentas de ciudadanía. El perfil `operador` es el predeterminado. Los perfiles `bombero` y `municipal` también pueden gestionar grifos y consultar registros de evacuación. Las validaciones y descartes de alertas quedan asociados al nombre de la cuenta que ejecutó la acción.
+Abre `http://localhost:5173` y elige **Iniciar sesión**. Usa el correo y la contraseña de la cuenta operativa. PyroGuard te lleva a `/admin`. El formulario **Registro ciudadano** crea exclusivamente cuentas de ciudadanía. Las cuentas administrativas nuevas se crean con perfil `bombero` por defecto. Los perfiles `bombero` y `municipal` también pueden gestionar grifos y consultar registros de evacuación. Las validaciones y descartes de alertas quedan asociados al nombre de la cuenta que ejecutó la acción.
 
-En **Reportes ciudadanos** puedes filtrar por estado, abrir la fotografía y ubicar el reporte en el mapa central. **Revisar** cambia el estado de pendiente a en revisión. **Validar** y **Descartar** registran la decisión final. Una vez validado, puedes vincular el reporte a una alerta operacional que ya exista. Varios reportes pueden apuntar a la misma alerta y la vinculación conserva el estado de la alerta. Los reportes anteriores que se guardaron sin cuenta asociada siguen disponibles para el personal.
+En **Central y mapa**, pulsa **Ver historial** en una alerta para ver sus despachos, validaciones y descartes. El historial guarda el responsable y la fecha de cada acción. Los registros anteriores muestran los datos disponibles al momento de su registro.
+
+En **Logística**, crea o edita grifos, consulta su historial y marca los ficticios como **DEMO**. Los filtros por sector y estado se comparten con Central. El mapa usa verde para disponible, amarillo para en revisión y rojo para sin agua.
+
+La bandeja **Reportes ciudadanos** y los marcadores morados del mapa central se actualizan automáticamente. En la bandeja puedes filtrar por estado, abrir la fotografía y centrar el mapa en un reporte. **Revisar** cambia el estado de pendiente a en revisión. **Validar** y **Descartar** registran la decisión final. Una vez validado, puedes vincular el reporte a una alerta operacional que ya exista. Varios reportes pueden apuntar a la misma alerta y la vinculación conserva el estado de la alerta. Los reportes anteriores que se guardaron sin cuenta asociada siguen disponibles para el personal.
 
 ### Ciudadanía
 
@@ -42,8 +45,8 @@ Escribe `/admin` en la barra del navegador para comprobar que la sesión ciudada
 
 ### Sesiones y pruebas
 
-- La sesión dura ocho horas por defecto. Para probar la caducidad, define `$env:PYROGUARD_SESSION_TTL_SECONDS = '15'` antes de iniciar el backend, inicia sesión y vuelve a enfocar la ventana pasados 15 segundos. Cerrar sesión revoca la sesión en SQLite.
-- El frontend usa el mismo origen para `/api` y `/uploads`. En un despliegue con HTTPS, configura `PYROGUARD_COOKIE_SECURE=1` y reenvía ambos caminos al backend con el host y el protocolo públicos. El servidor del frontend debe servir `index.html` al abrir directamente `/admin` o `/ciudadania`.
+- La sesión dura ocho horas por defecto y se conserva al recargar o reabrir el navegador dentro de ese plazo. Para probar la caducidad, define `$env:PYROGUARD_SESSION_TTL_SECONDS = '15'` antes de iniciar el backend, inicia sesión y vuelve a enfocar la ventana pasados 15 segundos. Cerrar sesión revoca solo la sesión de ese navegador en SQLite.
+- Consulta la [guía del servidor central con HTTPS](docs/SERVIDOR_CENTRAL.md) para conectar otros dispositivos a la misma base e instalar la cuenta administrativa.
 - El simulador de sensores y el script de latencia solicitan una cuenta operativa. También aceptan `PYROGUARD_ADMIN_EMAIL` y `PYROGUARD_ADMIN_PASSWORD` en el entorno del proceso.
 - `COMPROBAR_PYROGUARD.bat` ejecuta las pruebas y la compilación. También puedes usar `python -m pytest -q` desde la raíz y `npm.cmd test` y `npm.cmd run build` desde `frontend`.
 

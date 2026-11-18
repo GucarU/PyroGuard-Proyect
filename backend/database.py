@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent / "pyroguard.db"
+ADMIN_EMAIL = "admin.pyroguard@example.com"
 
 CREATE_ALERTAS_TABLE = """
 CREATE TABLE IF NOT EXISTS alertas (
@@ -116,7 +117,36 @@ CREATE TABLE IF NOT EXISTS grifos_demo (
     longitude REAL NOT NULL CHECK(longitude BETWEEN -180 AND 180),
     status TEXT NOT NULL CHECK(status IN ('DISPONIBLE','SIN_AGUA','EN_REVISION')),
     demo INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    sector TEXT NOT NULL DEFAULT '',
+    updated_at TEXT,
+    updated_by_id INTEGER REFERENCES auth_users(id) ON DELETE SET NULL,
+    updated_by TEXT
+)
+"""
+
+CREATE_ALERT_ACTIONS_TABLE = """
+CREATE TABLE IF NOT EXISTS alert_actions (
+    id INTEGER PRIMARY KEY,
+    alert_id INTEGER NOT NULL REFERENCES alertas(id) ON DELETE CASCADE,
+    actor_id INTEGER REFERENCES auth_users(id) ON DELETE SET NULL,
+    actor_name TEXT NOT NULL,
+    action TEXT NOT NULL CHECK(action IN ('UNIDAD_DESPACHADA', 'VALIDADO', 'FALSA_ALARMA')),
+    acted_at TEXT NOT NULL
+)
+"""
+
+CREATE_HYDRANT_ACTIONS_TABLE = """
+CREATE TABLE IF NOT EXISTS hydrant_actions (
+    id INTEGER PRIMARY KEY,
+    hydrant_id INTEGER NOT NULL REFERENCES grifos_demo(id) ON DELETE CASCADE,
+    actor_id INTEGER REFERENCES auth_users(id) ON DELETE SET NULL,
+    actor_name TEXT NOT NULL,
+    action TEXT NOT NULL CHECK(action IN ('CREADO', 'EDITADO')),
+    previous_status TEXT,
+    status TEXT NOT NULL,
+    changed_fields TEXT NOT NULL,
+    acted_at TEXT NOT NULL
 )
 """
 
@@ -141,8 +171,36 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
 )
 """
 
+# Install the rules without deleting legacy users or invalidating their references.
+CREATE_ADMIN_INSERT_GUARD = f"""
+CREATE TRIGGER IF NOT EXISTS auth_users_single_admin_insert
+BEFORE INSERT ON auth_users
+WHEN (NEW.role = 'ADMIN' AND NEW.email <> '{ADMIN_EMAIL}')
+     OR (NEW.role <> 'ADMIN' AND lower(NEW.email) = '{ADMIN_EMAIL}')
+     OR (NEW.role = 'ADMIN' AND EXISTS (SELECT 1 FROM auth_users WHERE role = 'ADMIN'))
+BEGIN
+    SELECT RAISE(ABORT, 'Cuenta administrativa reservada o en conflicto');
+END
+"""
+
+CREATE_ADMIN_UPDATE_GUARD = f"""
+CREATE TRIGGER IF NOT EXISTS auth_users_single_admin_update
+BEFORE UPDATE OF role, email ON auth_users
+WHEN (NEW.role <> OLD.role OR NEW.email <> OLD.email)
+     AND ((NEW.role = 'ADMIN' AND NEW.email <> '{ADMIN_EMAIL}')
+          OR (NEW.role <> 'ADMIN' AND lower(NEW.email) = '{ADMIN_EMAIL}')
+          OR (NEW.role = 'ADMIN' AND EXISTS (
+              SELECT 1 FROM auth_users WHERE role = 'ADMIN' AND id <> OLD.id
+          )))
+BEGIN
+    SELECT RAISE(ABORT, 'Cuenta administrativa reservada o en conflicto');
+END
+"""
+
 SCHEMA_STATEMENTS = (
     CREATE_USERS_TABLE,
+    CREATE_ADMIN_INSERT_GUARD,
+    CREATE_ADMIN_UPDATE_GUARD,
     CREATE_ALERTAS_TABLE,
     CREATE_SENSORES_ESTADO_TABLE,
     CREATE_TEMPERATURAS_TABLE,
@@ -151,6 +209,10 @@ SCHEMA_STATEMENTS = (
     CREATE_SOLICITUDES_AGUA_TABLE,
     CREATE_SAFE_CHECKINS_TABLE,
     CREATE_HYDRANTS_TABLE,
+    CREATE_ALERT_ACTIONS_TABLE,
+    CREATE_HYDRANT_ACTIONS_TABLE,
+    "CREATE INDEX IF NOT EXISTS alert_actions_by_alert ON alert_actions(alert_id, id)",
+    "CREATE INDEX IF NOT EXISTS hydrant_actions_by_hydrant ON hydrant_actions(hydrant_id, id)",
     CREATE_SESSIONS_TABLE,
     "CREATE INDEX IF NOT EXISTS auth_sessions_expiry ON auth_sessions(expires_at)",
 )
@@ -158,6 +220,12 @@ SCHEMA_STATEMENTS = (
 LEGACY_COLUMNS = {
     "alertas": dict.fromkeys(("validated_by", "validated_at", "discarded_by", "discarded_at"), "TEXT"),
     "albergues": {"status": "TEXT NOT NULL DEFAULT 'ABIERTO'"},
+    "grifos_demo": {
+        "sector": "TEXT NOT NULL DEFAULT ''",
+        "updated_at": "TEXT",
+        "updated_by_id": "INTEGER REFERENCES auth_users(id) ON DELETE SET NULL",
+        "updated_by": "TEXT",
+    },
     "reportes_vecinales": {
         "citizen_id": "INTEGER REFERENCES auth_users(id) ON DELETE SET NULL",
         "alert_id": "INTEGER REFERENCES alertas(id) ON DELETE SET NULL",

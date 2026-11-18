@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 
+from backend.auth import SESSION_COOKIE
 from backend.database import get_db_path
 
 
@@ -63,6 +64,26 @@ def test_revisar_validar_y_vincular_a_alerta_existente(client, citizen_client, i
     report_after_delete = client.get(REPORTS).json()[0]
     assert report_after_delete["status"] == "VALIDADO"
     assert report_after_delete["alert_id"] is None
+
+
+def test_reporte_y_revision_visibles_desde_cada_sesion_del_servidor(login_admin, new_client, citizen_client, image_bytes):
+    admin_a, admin_b = login_admin(), login_admin()
+    photo = image_bytes()
+    submitted = send_report(citizen_client, photo, location_label="Cerro Alegre")
+    report, = admin_a.get(REPORTS).json()
+    assert report == admin_b.get(REPORTS).json()[0]
+    assert report["id"] == submitted["id"] and report["status"] == "PENDIENTE"
+    assert admin_b.get(report["photo_path"]).content == photo
+    assert admin_b.patch(f"{REPORTS}/{report['id']}/status", json={"status": "VALIDADO"}).status_code == 200
+    assert admin_a.get(REPORTS).json()[0]["status"] == "VALIDADO"
+    assert admin_a.get("/api/alerts").json() == []
+
+    reopened = new_client()
+    reopened.cookies.set(SESSION_COOKIE, citizen_client.cookies[SESSION_COOKIE])
+    owned, = reopened.get(f"{REPORTS}/mine").json()
+    assert owned["id"] == submitted["id"] and owned["status"] == "VALIDADO"
+    assert reopened.get(owned["photo_path"]).content == photo
+    assert reopened.get(REPORTS).status_code == 403
 
 
 def test_cada_ciudadano_solo_ve_sus_reportes_y_fotos(client, citizen_client, anonymous_client, image_bytes):

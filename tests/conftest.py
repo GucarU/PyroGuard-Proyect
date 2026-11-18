@@ -27,6 +27,8 @@ def new_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("PYROGUARD_ENV", "dev")
     monkeypatch.delenv("PYROGUARD_COOKIE_SECURE", raising=False)
     monkeypatch.delenv("PYROGUARD_SESSION_TTL_SECONDS", raising=False)
+    monkeypatch.delenv("PYROGUARD_ADMIN_EMAIL", raising=False)
+    monkeypatch.delenv("PYROGUARD_ADMIN_PASSWORD", raising=False)
     from backend.main import app
 
     with ExitStack() as stack:
@@ -41,19 +43,20 @@ def anonymous_client(new_client) -> TestClient:
 @pytest.fixture
 def login_admin(new_client, monkeypatch):
     from backend.create_admin import main
+    from backend.database import ADMIN_EMAIL
 
     def login(profile="operador"):
-        email = f"{profile}@example.com"
         password = "Prueba operativa 123"
         with monkeypatch.context() as config:
-            config.setenv("PYROGUARD_ADMIN_EMAIL", email)
+            config.setenv("PYROGUARD_ADMIN_EMAIL", ADMIN_EMAIL)
             config.setenv("PYROGUARD_ADMIN_PASSWORD", password)
             config.setenv("PYROGUARD_ADMIN_NAME", "Personal PyroGuard")
             config.setenv("PYROGUARD_ADMIN_PROFILE", profile)
-            main()
+            main([])
         client = new_client()
-        response = client.post("/api/auth/login", json={"email": email, "password": password})
+        response = client.post("/api/auth/login", json={"email": ADMIN_EMAIL, "password": password})
         assert response.status_code == 200
+        assert response.json()["profile"] == profile
         return client
 
     return login

@@ -69,9 +69,12 @@ def test_hu10_valida_campos(citizen_client):
     assert response.status_code == 422
 
 
-def test_hu14_control_de_perfil_operativo_y_puntos(client, login_admin):
+def test_hu14_control_de_perfil_operativo(client):
     assert client.get('/api/hydrants', headers={'X-Pyroguard-Role':'bombero'}).status_code == 403
     assert client.post('/api/hydrants', json={'name':'Grifo DEMO', 'latitude':-33.04, 'longitude':-71.6}).status_code == 403
+
+
+def test_hu14_alta_de_puntos_por_bombero(login_admin):
     firefighter = login_admin('bombero')
     response = firefighter.post('/api/hydrants', json={'name':'Grifo de prueba 1', 'latitude':-33.04, 'longitude':-71.6})
     assert response.status_code == 201

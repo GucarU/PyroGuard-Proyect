@@ -190,17 +190,64 @@ class SafeCheckin(BaseModel):
     status: Literal["A_SALVO"]
     reported_at: str
 
+HydrantStatus = Literal["DISPONIBLE", "SIN_AGUA", "EN_REVISION"]
+HydrantName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=120)]
+HydrantSector = Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)]
+Latitude = Annotated[float, Field(ge=-90, le=90)]
+Longitude = Annotated[float, Field(ge=-180, le=180)]
+
+
 class HydrantCreate(BaseModel):
-    name: str = Field(min_length=3, max_length=120)
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
-    status: Literal["DISPONIBLE", "SIN_AGUA", "EN_REVISION"] = "EN_REVISION"
+    name: HydrantName
+    sector: HydrantSector = ""
+    latitude: Latitude
+    longitude: Longitude
+    status: HydrantStatus = "EN_REVISION"
+    demo: bool = True
+
+
+class HydrantUpdate(BaseModel):
+    name: HydrantName | None = None
+    sector: HydrantSector | None = None
+    latitude: Latitude | None = None
+    longitude: Longitude | None = None
+    status: HydrantStatus | None = None
+    demo: bool | None = None
+
 
 class Hydrant(BaseModel):
     id: int
     name: str
+    sector: str
     latitude: float
     longitude: float
-    status: Literal["DISPONIBLE", "SIN_AGUA", "EN_REVISION"]
+    status: HydrantStatus
     demo: bool
     created_at: str
+    updated_at: str
+    updated_by_id: int | None
+    updated_by: str | None
+
+
+class OperationAction(BaseModel):
+    id: int | None = None
+    actor_id: int | None = None
+    actor_name: str | None = None
+    acted_at: str | None
+
+
+AlertDecision = Literal["VALIDADO", "FALSA_ALARMA"]
+AlertActionType = Literal["UNIDAD_DESPACHADA", "VALIDADO", "FALSA_ALARMA"]
+
+
+class AlertAction(OperationAction):
+    alert_id: int
+    action: AlertActionType
+
+
+class HydrantAction(OperationAction):
+    hydrant_id: int
+    action: Literal["CREADO", "EDITADO"]
+    previous_status: HydrantStatus | None = None
+    status: HydrantStatus
+    changed_fields: list[str] = Field(default_factory=list)
